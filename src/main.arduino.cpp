@@ -2,16 +2,18 @@
 #include "shared/Configuration.hpp"
 #include "arduino/RickRoll.hpp"
 #include "arduino/ArduinoConfiguration.hpp"
+#include <SoftwareSerial.h>
 
 ArduinoConfiguration configuration;
 short redLEDBrightness = 0;
 short greenLEDBrightness = 0;
 short blueLEDBrightness = 0;
 bool rickRolling = false;
+SoftwareSerial softwareSerial = *new SoftwareSerial(10, 11);
 
 void setup() {
     pinMode(LED_BUILTIN, OUTPUT);
-    Serial.begin(115200);
+    softwareSerial.begin(9600);
 //    delay(200);
     pinMode(configuration.redLedPort, OUTPUT);
     pinMode(configuration.greenLedPort, OUTPUT);
@@ -19,16 +21,16 @@ void setup() {
     pinMode(configuration.buzzerPort, OUTPUT);
     pinMode(configuration.photoResistorPort, INPUT);
     EventCodes booted = Booted;
-    sendEvent(booted);
+    sendEvent(softwareSerial, booted);
 }
 
 void loop() {
     analogWrite(configuration.redLedPort, redLEDBrightness);
     analogWrite(configuration.greenLedPort, greenLEDBrightness);
     analogWrite(configuration.blueLedPort, blueLEDBrightness);
-    if (Serial.available()) {
+    if (softwareSerial.available()) {
         DynamicJsonDocument document(200);
-        deserializeJson(document, Serial.readStringUntil('\n'));
+        deserializeJson(document, softwareSerial.readStringUntil('\n'));
         if (document.containsKey("eventCode")) {
             int eventCode = document["eventCode"];
             JsonObject data = document.containsKey("data") ? document["data"] : JsonObject();
@@ -43,17 +45,17 @@ void loop() {
                     if (data.containsKey("blue")) {
                         blueLEDBrightness = data["blue"];
                     }
-                    sendAck(SendLED);
+                    sendAck(softwareSerial, SendLED);
                     break;
                 case StartScan:
-                    sendAck(StartScan);
+                    sendAck(softwareSerial, StartScan);
                     break;
                 case RickRoll:
                     rickRolling = !rickRolling;
-                    sendAck(RickRoll);
+                    sendAck(softwareSerial, RickRoll);
                     break;
                 default:
-                    sendEvent(InvalidEvent);
+                    sendEvent(softwareSerial, InvalidEvent);
                     break;
             }
         }

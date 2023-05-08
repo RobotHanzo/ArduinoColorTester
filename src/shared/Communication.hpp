@@ -28,11 +28,39 @@ enum EventCodes {
     InvalidEvent = 255
 };
 
+class LEDBrightness: public Serializable {
+public:
+    LEDBrightness(short r, short g, short b) {
+        red = r;
+        green = g;
+        blue = b;
+    }
+
+    short red = 0;
+    short green = 0;
+    short blue = 0;
+
+    DynamicJsonDocument serialize() override {
+        DynamicJsonDocument document(200);
+        document["red"] = red;
+        document["green"] = green;
+        document["blue"] = blue;
+        return document;
+    }
+};
+
 void sendEvent(EventCodes eventCode) {
     DynamicJsonDocument document(200);
     document["eventCode"] = eventCode;
     serializeJson(document, Serial);
     Serial.println();
+}
+
+void sendEvent(Stream &s, EventCodes eventCode) {
+    DynamicJsonDocument document(200);
+    document["eventCode"] = eventCode;
+    serializeJson(document, s);
+    s.println();
 }
 
 void sendAck(EventCodes eventCode) {
@@ -43,12 +71,28 @@ void sendAck(EventCodes eventCode) {
     Serial.println();
 }
 
-void sendEvent(EventCodes eventCode, Serializable *data) {
+void sendAck(Stream &s, EventCodes eventCode) {
+    DynamicJsonDocument document(200);
+    document["eventCode"] = Acknowledged;
+    document.createNestedObject("data")["code"] = eventCode;
+    serializeJson(document, s);
+    s.println();
+}
+
+void sendEvent(EventCodes eventCode, Serializable& data) {
     DynamicJsonDocument document(200);
     document["eventCode"] = eventCode;
-    document["data"] = data->serialize();
+    document["data"] = data.serialize();
     serializeJson(document, Serial);
     Serial.println();
+}
+
+void sendEvent(Stream &s, EventCodes eventCode, Serializable& data) {
+    DynamicJsonDocument document(200);
+    document["eventCode"] = eventCode;
+    document["data"] = data.serialize();
+    serializeJson(document, s);
+    s.println();
 }
 
 #endif //ARDUINOCOLORTESTER_COMMUNICATION_HPP
