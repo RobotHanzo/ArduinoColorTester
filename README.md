@@ -1,0 +1,1 @@
+You should rename `src/esp32/ESP32Configuration.hpp.template` to `ESP32Configuration.hpp` and change the password before compiling

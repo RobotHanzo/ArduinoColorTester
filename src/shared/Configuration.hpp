@@ -10,16 +10,7 @@
 #include "ArduinoJson.h"
 #include "shared/Communication.hpp"
 
-class Configuration {
-public:
-    uint8_t redLedPort = 3;
-    uint8_t greenLedPort = 5;
-    uint8_t blueLedPort = 6;
-    uint8_t buzzerPort = 9;
-    uint8_t photoResistorPort = A0;
-};
-
-class ScanConfiguration: public Serializable{
+class ScanConfiguration : public Serializable {
 public:
     short scanTimes = 20;
     int scanInterval = 50; // ms

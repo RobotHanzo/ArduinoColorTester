@@ -1,0 +1,14 @@
+//
+// Created by natha on 5/8/2023.
+//
+
+#ifndef ARDUINOCOLORTESTER_ESP32CONFIGURATION_HPP
+#define ARDUINOCOLORTESTER_ESP32CONFIGURATION_HPP
+
+class ESP32Configuration {
+public:
+    const char *ssid = "Color Tester :)";
+    const char *password = "<REDACTED>";
+};
+
+#endif //ARDUINOCOLORTESTER_ESP32CONFIGURATION_HPP

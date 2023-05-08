@@ -35,6 +35,7 @@
 #define rest    (-1)
 
 #include <Arduino.h>
+#include "ArduinoConfiguration.hpp"
 
 
 volatile int beatlength = 100; // determines tempo
@@ -96,7 +97,7 @@ int song1_chorus_rhythmn[] =
          3, 3, 3, 1, 2, 2, 2, 4, 8, 4
         };
 
-void rickRoll(Configuration configuration) {
+void rickRoll(ArduinoConfiguration configuration) {
     int notelength = 0;
     if (a == 1 || a == 2) {
         // intro

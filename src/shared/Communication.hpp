@@ -5,8 +5,6 @@
 #ifndef ARDUINOCOLORTESTER_COMMUNICATION_HPP
 #define ARDUINOCOLORTESTER_COMMUNICATION_HPP
 
-#endif //ARDUINOCOLORTESTER_COMMUNICATION_HPP
-
 #include "ArduinoJson.h"
 
 class Serializable {
@@ -52,3 +50,7 @@ void sendEvent(EventCodes eventCode, Serializable *data) {
     serializeJson(document, Serial);
     Serial.println();
 }
+
+#endif //ARDUINOCOLORTESTER_COMMUNICATION_HPP
+
+

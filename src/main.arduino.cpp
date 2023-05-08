@@ -1,8 +1,9 @@
 #include <Arduino.h>
 #include "shared/Configuration.hpp"
 #include "arduino/RickRoll.hpp"
+#include "arduino/ArduinoConfiguration.hpp"
 
-Configuration configuration;
+ArduinoConfiguration configuration;
 short redLEDBrightness = 0;
 short greenLEDBrightness = 0;
 short blueLEDBrightness = 0;
@@ -10,8 +11,8 @@ bool rickRolling = false;
 
 void setup() {
     pinMode(LED_BUILTIN, OUTPUT);
-    Serial.begin(9600);
-    delay(200);
+    Serial.begin(115200);
+//    delay(200);
     pinMode(configuration.redLedPort, OUTPUT);
     pinMode(configuration.greenLedPort, OUTPUT);
     pinMode(configuration.blueLedPort, OUTPUT);
