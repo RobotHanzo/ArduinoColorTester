@@ -12,9 +12,11 @@ public:
     virtual DynamicJsonDocument serialize() = 0;
 };
 
+
 enum EventCodes {
     Booted = 0,
-    Acknowledged = 1, // This will be ignored in arduino_esp32 for now
+    Acknowledged = 1,
+    Reply = 2,
 //    ScanStarted = 10, This is replaced with Ack. for now, since tasks are handled in ESP32
     ScanFinished = 11,
     ScanCanceled = 12,
@@ -23,12 +25,14 @@ enum EventCodes {
     CancelScan = 101,
     AbortScan = 102,
     Shutdown = 103,
-    SendLED = 200,
+    SendLEDBrightness = 200,
     RickRoll = 201,
+    ReadLEDBrightness = 212,
+    ReadPhotoResistor = 213,
     InvalidEvent = 255
 };
 
-class LEDBrightness: public Serializable {
+class LEDBrightness : public Serializable {
 public:
     LEDBrightness(short r, short g, short b) {
         red = r;
@@ -79,7 +83,27 @@ void sendAck(Stream &s, EventCodes eventCode) {
     s.println();
 }
 
-void sendEvent(EventCodes eventCode, Serializable& data) {
+void sendReply(EventCodes eventCode, Serializable &data) {
+    DynamicJsonDocument document(200);
+    document["eventCode"] = Reply;
+    JsonObject d = document.createNestedObject("data");
+    d["code"] = eventCode;
+    d["data"] = data.serialize();
+    serializeJson(document, Serial);
+    Serial.println();
+}
+
+void sendReply(Stream &s, EventCodes eventCode, Serializable &data) {
+    DynamicJsonDocument document(200);
+    document["eventCode"] = Reply;
+    JsonObject d = document.createNestedObject("data");
+    d["code"] = eventCode;
+    d["data"] = data.serialize();
+    serializeJson(document, s);
+    s.println();
+}
+
+void sendEvent(EventCodes eventCode, Serializable &data) {
     DynamicJsonDocument document(200);
     document["eventCode"] = eventCode;
     document["data"] = data.serialize();
@@ -87,7 +111,7 @@ void sendEvent(EventCodes eventCode, Serializable& data) {
     Serial.println();
 }
 
-void sendEvent(Stream &s, EventCodes eventCode, Serializable& data) {
+void sendEvent(Stream &s, EventCodes eventCode, Serializable &data) {
     DynamicJsonDocument document(200);
     document["eventCode"] = eventCode;
     document["data"] = data.serialize();

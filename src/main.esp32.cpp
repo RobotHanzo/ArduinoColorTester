@@ -11,11 +11,11 @@
 #include "AsyncElegantOTA.h"
 #include <ArduinoJson.h>
 #include "shared/Communication.hpp"
+#include "shared/Debug.hpp"
 
 ESP32Configuration configuration;
 AsyncWebServer server(80);
 AsyncWebSocket ws("/ws");
-bool ledOn = false;
 String ser = "";
 //unsigned long ledStopAt = 0;
 
@@ -43,13 +43,13 @@ void setup() {
     server.serveStatic("/icons/", SPIFFS, "/");
     server.serveStatic("/assets/", SPIFFS, "/");
     server.on("/light_on", HTTP_GET, [](AsyncWebServerRequest *request) {
-        EventCodes eventCode = SendLED;
+        EventCodes eventCode = SendLEDBrightness;
         LEDBrightness brightness = LEDBrightness{255, 255, 255};
         sendEvent(eventCode, brightness);
         request->send(200, "text/plain", "Shining lights");
     });
     server.on("/light_off", HTTP_GET, [](AsyncWebServerRequest *request) {
-        EventCodes eventCode = SendLED;
+        EventCodes eventCode = SendLEDBrightness;
         LEDBrightness brightness = LEDBrightness{0, 0, 0};
         sendEvent(eventCode, brightness);
         request->send(200, "text/plain", "Dimming lights");
@@ -57,34 +57,49 @@ void setup() {
     server.on("/read_buffer", HTTP_GET, [](AsyncWebServerRequest *request) {
         request->send(200, "text/plain", ser);
     });
+    server.on("/read_photo_resistor", HTTP_GET, [](AsyncWebServerRequest *request) {
+        EventCodes eventCode = ReadPhotoResistor;
+        sendEvent(eventCode);
+        request->send(200, "text/plain", "Reading photo resistor");
+    });
     server.begin();
+    EventCodes booted = Booted;
+    sendEvent(booted);
 }
 
 void loop() {
-    if (ledOn) {
-        digitalWrite(2, HIGH);
-    } else {
-        digitalWrite(2, LOW);
-    }
     ws.cleanupClients();
     if (Serial.available()) {
         DynamicJsonDocument document(200);
-        String buf = Serial.readStringUntil('\n');
-        ser += buf;
-        ledOn = !ledOn;
-        deserializeJson(document, buf);
+        String message = Serial.readStringUntil('\n');
+        ser += message;
+        deserializeJson(document, message);
         if (document.containsKey("eventCode")) {
             int eventCode = document["eventCode"];
             JsonObject data = document.containsKey("data") ? document["data"] : JsonObject();
             switch (eventCode) {
+                case Booted:
+                    sendAck(Booted);
+                    break;
                 case ScanFinished:
                     sendAck(ScanFinished);
                     break;
                 case Acknowledged:
                     //blink LED
                     break;
+                case Reply:
+                    data = data.containsKey("data") ? data["data"] : JsonObject();
+                    switch (data["code"].as<short>()) {
+                        case ReadPhotoResistor:
+                            ws.textAll(String(data["value"].as<int>()));
+                            break;
+                        default:
+                            break;
+                    }
+                case InvalidEvent://TODO
+                    break;
                 default:
-                    sendEvent(InvalidEvent);
+                    sendEvent(InvalidEvent, *new InvalidEventReply(message));
                     break;
             }
         }
