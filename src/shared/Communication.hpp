@@ -6,12 +6,7 @@
 #define ARDUINOCOLORTESTER_COMMUNICATION_HPP
 
 #include "ArduinoJson.h"
-
-class Serializable {
-public:
-    virtual DynamicJsonDocument serialize() = 0;
-};
-
+#include "shared/models/Serializable.h"
 
 enum EventCodes {
     Booted = 0,
@@ -32,7 +27,7 @@ enum EventCodes {
     InvalidEvent = 255
 };
 
-class LEDBrightness : public Serializable {
+class LEDBrightness : public Serializable<LEDBrightness> {
 public:
     LEDBrightness(short r, short g, short b) {
         red = r;
@@ -44,12 +39,28 @@ public:
     short green = 0;
     short blue = 0;
 
-    DynamicJsonDocument serialize() override {
+    DynamicJsonDocument toJson() override {
         DynamicJsonDocument document(200);
         document["red"] = red;
         document["green"] = green;
         document["blue"] = blue;
         return document;
+    }
+
+    LEDBrightness fromJson(String json) override {
+        DynamicJsonDocument document(200);
+        deserializeJson(document, json);
+        red = document["red"];
+        green = document["green"];
+        blue = document["blue"];
+        return *this;
+    }
+
+    LEDBrightness fromJson(DynamicJsonDocument doc) override {
+        red = doc["red"];
+        green = doc["green"];
+        blue = doc["blue"];
+        return *this;
     }
 };
 
@@ -83,38 +94,38 @@ void sendAck(Stream &s, EventCodes eventCode) {
     s.println();
 }
 
-void sendReply(EventCodes eventCode, Serializable &data) {
+void sendReply(EventCodes eventCode, Serializable<JsonObject> &data) {
     DynamicJsonDocument document(200);
     document["eventCode"] = Reply;
     JsonObject d = document.createNestedObject("data");
     d["code"] = eventCode;
-    d["data"] = data.serialize();
+    d["data"] = data.toJson();
     serializeJson(document, Serial);
     Serial.println();
 }
 
-void sendReply(Stream &s, EventCodes eventCode, Serializable &data) {
+void sendReply(Stream &s, EventCodes eventCode, Serializable<JsonObject> &data) {
     DynamicJsonDocument document(200);
     document["eventCode"] = Reply;
     JsonObject d = document.createNestedObject("data");
     d["code"] = eventCode;
-    d["data"] = data.serialize();
+    d["data"] = data.toJson();
     serializeJson(document, s);
     s.println();
 }
 
-void sendEvent(EventCodes eventCode, Serializable &data) {
+void sendEvent(EventCodes eventCode, Serializable<JsonObject> &data) {
     DynamicJsonDocument document(200);
     document["eventCode"] = eventCode;
-    document["data"] = data.serialize();
+    document["data"] = data.toJson();
     serializeJson(document, Serial);
     Serial.println();
 }
 
-void sendEvent(Stream &s, EventCodes eventCode, Serializable &data) {
+void sendEvent(Stream &s, EventCodes eventCode, Serializable<JsonObject> &data) {
     DynamicJsonDocument document(200);
     document["eventCode"] = eventCode;
-    document["data"] = data.serialize();
+    document["data"] = data.toJson();
     serializeJson(document, s);
     s.println();
 }

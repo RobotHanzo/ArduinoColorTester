@@ -15,7 +15,7 @@ public:
 
     int value = 0;
 
-    DynamicJsonDocument serialize() override {
+    DynamicJsonDocument toJson() override {
         DynamicJsonDocument document(200);
         document["value"] = value;
         return document;
@@ -30,7 +30,7 @@ public:
 
     String received;
 
-    DynamicJsonDocument serialize() override {
+    DynamicJsonDocument toJson() override {
         DynamicJsonDocument document(200);
         document["received"] = received;
         return document;
