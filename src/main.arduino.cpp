@@ -31,7 +31,7 @@ void loop() {
     analogWrite(configuration.redLedPort, redLEDBrightness);
     analogWrite(configuration.greenLedPort, greenLEDBrightness);
     analogWrite(configuration.blueLedPort, blueLEDBrightness);
-    if (softwareSerial.available()) {
+    if (softwareSerial.available()) { //TODO migrate to bourne for JSON parsing & use models
         DynamicJsonDocument document(200);
         String message = softwareSerial.readStringUntil('\n');
         deserializeJson(document, message);

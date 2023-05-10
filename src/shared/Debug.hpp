@@ -4,36 +4,46 @@
 
 #ifndef ARDUINOCOLORTESTER_DEBUG_HPP
 #define ARDUINOCOLORTESTER_DEBUG_HPP
+
 #include "Communication.hpp"
-#include "ArduinoJson.h"
 
 class ReadPhotoResistorReply : public Serializable {
 public:
-    ReadPhotoResistorReply(int value) {
+    explicit ReadPhotoResistorReply(int value) {
         this->value = value;
     }
 
     int value = 0;
 
-    DynamicJsonDocument serialize() override {
-        DynamicJsonDocument document(200);
-        document["value"] = value;
-        return document;
+    bourne::json toJson() override {
+        bourne::json object = bourne::json();
+        object["value"] = value;
+        return object;
+    }
+
+    void fromJson(std::string jsonObj) override {
+        bourne::json object = bourne::json::parse(jsonObj);
+        value = (int) object["value"].to_int();
     }
 };
 
 class InvalidEventReply : public Serializable {
 public:
-    InvalidEventReply(String value) {
+    explicit InvalidEventReply(String value) {
         this->received = value;
     }
 
     String received;
 
-    DynamicJsonDocument serialize() override {
-        DynamicJsonDocument document(200);
-        document["received"] = received;
-        return document;
+    bourne::json toJson() override {
+        bourne::json object = bourne::json();
+        object["received"] = received.c_str();
+        return object;
+    }
+
+    void fromJson(std::string jsonObj) override {
+        bourne::json object = bourne::json::parse(jsonObj);
+        received = object["received"].to_string().c_str();
     }
 };
 

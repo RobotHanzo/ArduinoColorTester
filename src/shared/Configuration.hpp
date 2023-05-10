@@ -7,7 +7,6 @@
 
 
 #include <pins_arduino.h>
-#include "ArduinoJson.h"
 #include "shared/Communication.hpp"
 
 class ScanConfiguration : public Serializable {
@@ -16,20 +15,19 @@ public:
     int scanInterval = 50; // ms
     short brightness = 255;
 
-    DynamicJsonDocument serialize() override {
-        DynamicJsonDocument document(200);
-        document["scanTimes"] = scanTimes;
-        document["scanInterval"] = scanInterval;
-        document["brightness"] = brightness;
-        return document;
+    bourne::json toJson() override {
+        bourne::json object = bourne::json();
+        object["scanTimes"] = scanTimes;
+        object["scanInterval"] = scanInterval;
+        object["brightness"] = brightness;
+        return object;
     }
 
-    static ScanConfiguration deserialize(JsonDocument document) {
-        ScanConfiguration config;
-        config.scanTimes = document["scanTimes"];
-        config.scanInterval = document["scanInterval"];
-        config.brightness = document["brightness"];
-        return config;
+    void fromJson(std::string jsonObj) override {
+        bourne::json object = bourne::json::parse(jsonObj);
+        scanTimes = (short) object["scanTimes"].to_int();
+        scanInterval = (int) object["scanInterval"].to_int();
+        brightness = (short) object["brightness"].to_int();
     }
 };
 
