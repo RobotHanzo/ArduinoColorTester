@@ -11,7 +11,6 @@
 
 const {configure} = require('quasar/wrappers');
 
-
 module.exports = configure(function (/* ctx */) {
   return {
     eslint: {
@@ -85,9 +84,9 @@ module.exports = configure(function (/* ctx */) {
       // viteVuePluginOptions: {},
 
 
-      // vitePlugins: [
-      //   [ 'package-name', { ..options.. } ]
-      // ]
+      vitePlugins: [
+        [ 'vite-plugin-compression', {deleteOriginFile: true} ]
+      ]
     },
 
     // Full list of options: https://v2.quasar.dev/quasar-cli-vite/quasar-config-js#devServer
@@ -111,7 +110,10 @@ module.exports = configure(function (/* ctx */) {
       // directives: [],
 
       // Quasar plugins
-      plugins: []
+      plugins: [
+        'Loading',
+        'Dialog'
+      ]
     },
 
     // animations: 'all', // --- includes all animations

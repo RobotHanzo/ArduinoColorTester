@@ -16,8 +16,8 @@ enum WebSocketEventCodes {
     HELLO = 10,
     DEBUG_SET_LED_BRIGHTNESS = 200,
     DEBUG_READ_PHOTO_RESISTOR = 201,
-    DEBUG_ARDUINO_INCOMING_MESSAGE = 202
-
+    DEBUG_ARDUINO_INCOMING_MESSAGE = 202,
+    REPLY_DEBUG_READ_PHOTO_RESISTOR = 1201,
 };
 
 int enum_to_int(WebSocketEventCodes eventCode) {
@@ -106,6 +106,11 @@ onWebSocketEvent(AsyncWebSocket *webSocket, AsyncWebSocketClient *client, AwsEve
                         LEDInfo ledInfo = LEDInfo().fromJson(object["data"].as<JsonObject>());
                         sendEvent(SendLEDBrightness, ledInfo.toJson());
                         sendWebSocketAck(client, WebSocketEventCodes::DEBUG_SET_LED_BRIGHTNESS);
+                        break;
+                    }
+                    case DEBUG_READ_PHOTO_RESISTOR: {
+                        sendEvent(ReadPhotoResistor);
+                        sendWebSocketAck(client, WebSocketEventCodes::DEBUG_READ_PHOTO_RESISTOR);
                         break;
                     }
                     default:

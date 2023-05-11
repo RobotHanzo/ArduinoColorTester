@@ -64,9 +64,15 @@ void loop() {
                 case Reply:
                     data = data.containsKey("data") ? data["data"] : JsonObject();
                     switch (data["code"].as<short>()) {
-                        case ReadPhotoResistor:
-                            ws.textAll(String(data["value"].as<int>()));
+                        case ReadPhotoResistor: {
+                            DynamicJsonDocument websocketReply(200);
+                            websocketReply["eventCode"] = enum_to_int(REPLY_DEBUG_READ_PHOTO_RESISTOR);
+                            websocketReply["data"]["value"] = data["value"];
+                            String json;
+                            serializeJson(websocketReply, json);
+                            ws.textAll(json);
                             break;
+                        }
                         default:
                             break;
                     }

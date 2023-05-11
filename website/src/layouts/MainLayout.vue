@@ -26,9 +26,7 @@
     <q-drawer v-model="leftDrawerOpen" elevated show-if-above side="left">
       <q-list class="menu-list fit column">
         <q-item
-          v-for="endpoint of endpoints.filter((e) => {
-            return e.permission === undefined || hasPermission(e.permission);
-          })"
+          v-for="endpoint of endpoints"
           :key="endpoint.name"
           v-ripple
           :active="selected === endpoint.name"
@@ -99,22 +97,19 @@ const router = useRouter();
 let leftDrawerOpen = ref(false);
 let endpoints = [
   {
-    name: 'Aliases',
-    url: '/aliases',
-    icon: 'bookmark',
-    permission: 'aliases.add',
+    name: 'Scans',
+    url: '/scans',
+    icon: 'document_scanner',
   },
   {
-    name: 'Prices',
-    url: '/prices',
-    icon: 'attach_money',
-    permission: 'prices.set',
+    name: 'Scan Profiles',
+    url: '/profiles',
+    icon: 'settings',
   },
   {
-    name: 'Scammers',
-    url: '/scammers',
-    icon: 'accessible_forward',
-    permission: 'scammers.add',
+    name: 'Debug',
+    url: '/debug',
+    icon: 'terminal',
   },
 ];
 let selected = ref('');
@@ -127,10 +122,6 @@ for (let endpoint of endpoints) {
 
 function toggleLeftDrawer() {
   leftDrawerOpen.value = !leftDrawerOpen.value;
-}
-
-function hasPermission(permission) {
-  return checkIfAccountHasPermission(permission);
 }
 
 function changeSelected(name) {
