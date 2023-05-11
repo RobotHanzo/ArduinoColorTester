@@ -27,16 +27,20 @@ enum EventCodes {
     InvalidEvent = 255
 };
 
+int enum_to_int(EventCodes eventCode) {
+    return static_cast<int>(eventCode);
+}
+
 void sendEvent(EventCodes eventCode) {
     DynamicJsonDocument document(200);
-    document["eventCode"] = eventCode;
+    document["eventCode"] = enum_to_int(eventCode);
     serializeJson(document, Serial);
     Serial.println();
 }
 
 void sendEvent(Stream &s, EventCodes eventCode) {
     DynamicJsonDocument document(200);
-    document["eventCode"] = eventCode;
+    document["eventCode"] = enum_to_int(eventCode);
     serializeJson(document, s);
     s.println();
 }
@@ -79,7 +83,7 @@ void sendReply(Stream &s, EventCodes eventCode, const JsonDocument& data) {
 
 void sendEvent(EventCodes eventCode, const JsonDocument& data) {
     DynamicJsonDocument document(200);
-    document["eventCode"] = eventCode;
+    document["eventCode"] = enum_to_int(eventCode);
     document["data"] = data;
     serializeJson(document, Serial);
     Serial.println();
@@ -87,7 +91,7 @@ void sendEvent(EventCodes eventCode, const JsonDocument& data) {
 
 void sendEvent(Stream &s, EventCodes eventCode, const JsonDocument& data) {
     DynamicJsonDocument document(200);
-    document["eventCode"] = eventCode;
+    document["eventCode"] = enum_to_int(eventCode);
     document["data"] = data;
     serializeJson(document, s);
     s.println();
