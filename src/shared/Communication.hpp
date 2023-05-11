@@ -5,9 +5,13 @@
 #ifndef ARDUINOCOLORTESTER_COMMUNICATION_HPP
 #define ARDUINOCOLORTESTER_COMMUNICATION_HPP
 
-#include "bourne/json.hpp"
-#include "Arduino.h"
-#include "Serializable.h"
+#include "ArduinoJson.h"
+
+class Serializable {
+public:
+    virtual DynamicJsonDocument serialize() = 0;
+};
+
 
 enum EventCodes {
     Booted = 0,
@@ -28,47 +32,92 @@ enum EventCodes {
     InvalidEvent = 255
 };
 
-int enum_to_int(EventCodes eventCode) {
-    return static_cast<int>(eventCode);
+class LEDBrightness : public Serializable {
+public:
+    LEDBrightness(short r, short g, short b) {
+        red = r;
+        green = g;
+        blue = b;
+    }
+
+    short red = 0;
+    short green = 0;
+    short blue = 0;
+
+    DynamicJsonDocument serialize() override {
+        DynamicJsonDocument document(200);
+        document["red"] = red;
+        document["green"] = green;
+        document["blue"] = blue;
+        return document;
+    }
+};
+
+void sendEvent(EventCodes eventCode) {
+    DynamicJsonDocument document(200);
+    document["eventCode"] = eventCode;
+    serializeJson(document, Serial);
+    Serial.println();
 }
 
 void sendEvent(Stream &s, EventCodes eventCode) {
-    bourne::json j = {"eventCode", &eventCode};
-    s.println(j.dump().c_str());
-}
-
-void sendEvent(EventCodes eventCode) {
-    sendEvent(Serial, eventCode);
-}
-
-void sendAck(Stream &s, EventCodes eventCode) {
-    bourne::json j = {"eventCode", enum_to_int(Acknowledged), "data", bourne::json({"code", &eventCode})};
-    s.println(j.dump().c_str());
+    DynamicJsonDocument document(200);
+    document["eventCode"] = eventCode;
+    serializeJson(document, s);
+    s.println();
 }
 
 void sendAck(EventCodes eventCode) {
-    sendAck(Serial, eventCode);
+    DynamicJsonDocument document(200);
+    document["eventCode"] = Acknowledged;
+    document.createNestedObject("data")["code"] = eventCode;
+    serializeJson(document, Serial);
+    Serial.println();
 }
 
-void sendReply(Stream &s, EventCodes eventCode, Serializable &data) {
-    bourne::json j = {"eventCode", enum_to_int(Reply), "data",
-                      bourne::json({"code", enum_to_int(eventCode), "data", data.toJson()})};
-    s.println(j.dump().c_str());
+void sendAck(Stream &s, EventCodes eventCode) {
+    DynamicJsonDocument document(200);
+    document["eventCode"] = Acknowledged;
+    document.createNestedObject("data")["code"] = eventCode;
+    serializeJson(document, s);
+    s.println();
 }
 
 void sendReply(EventCodes eventCode, Serializable &data) {
-    sendReply(Serial, eventCode, data);
+    DynamicJsonDocument document(200);
+    document["eventCode"] = Reply;
+    JsonObject d = document.createNestedObject("data");
+    d["code"] = eventCode;
+    d["data"] = data.serialize();
+    serializeJson(document, Serial);
+    Serial.println();
 }
 
-void sendEvent(Stream &s, EventCodes eventCode, Serializable &data) {
-    bourne::json j = {"eventCode", enum_to_int(eventCode), "data", data.toJson()};
-    s.println(j.dump().c_str());
+void sendReply(Stream &s, EventCodes eventCode, Serializable &data) {
+    DynamicJsonDocument document(200);
+    document["eventCode"] = Reply;
+    JsonObject d = document.createNestedObject("data");
+    d["code"] = eventCode;
+    d["data"] = data.serialize();
+    serializeJson(document, s);
+    s.println();
 }
 
 void sendEvent(EventCodes eventCode, Serializable &data) {
-    sendEvent(Serial, eventCode, data);
+    DynamicJsonDocument document(200);
+    document["eventCode"] = eventCode;
+    document["data"] = data.serialize();
+    serializeJson(document, Serial);
+    Serial.println();
 }
 
+void sendEvent(Stream &s, EventCodes eventCode, Serializable &data) {
+    DynamicJsonDocument document(200);
+    document["eventCode"] = eventCode;
+    document["data"] = data.serialize();
+    serializeJson(document, s);
+    s.println();
+}
 
 #endif //ARDUINOCOLORTESTER_COMMUNICATION_HPP
 

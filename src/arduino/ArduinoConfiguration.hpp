@@ -6,6 +6,7 @@
 #define ARDUINOCOLORTESTER_ARDUINOCONFIGURATION_HPP
 
 #include "shared/Communication.hpp"
+#include "ArduinoJson.h"
 #include "ArduinoConfiguration.hpp"
 #include <pins_arduino.h>
 
