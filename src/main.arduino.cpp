@@ -3,12 +3,11 @@
 #include "arduino/RickRoll.hpp"
 #include "arduino/ArduinoConfiguration.hpp"
 #include "shared/Debug.hpp"
+#include "shared/models/LEDInfo.h"
 #include <SoftwareSerial.h>
 
 ArduinoConfiguration configuration;
-short redLEDBrightness = 0;
-short greenLEDBrightness = 0;
-short blueLEDBrightness = 0;
+LEDInfo ledInfo;
 bool rickRolling = false;
 SoftwareSerial softwareSerial = *new SoftwareSerial(10, 11);
 
@@ -28,32 +27,25 @@ void setup() {
 }
 
 void loop() {
-    analogWrite(configuration.redLedPort, redLEDBrightness);
-    analogWrite(configuration.greenLedPort, greenLEDBrightness);
-    analogWrite(configuration.blueLedPort, blueLEDBrightness);
+    analogWrite(configuration.redLedPort, ledInfo.getR());
+    analogWrite(configuration.greenLedPort, ledInfo.getG());
+    analogWrite(configuration.blueLedPort, ledInfo.getB());
     if (softwareSerial.available()) { //TODO migrate to bourne for JSON parsing & use models
-        DynamicJsonDocument document(200);
         String message = softwareSerial.readStringUntil('\n');
-        deserializeJson(document, message);
-        if (document.containsKey("eventCode")) {
-            int eventCode = document["eventCode"];
-            JsonObject data = document.containsKey("data") ? document["data"] : JsonObject();
+        bourne::json document = bourne::json::parse(message.c_str());
+        if (document.has_key("eventCode")) {
+            int eventCode = (int) document["eventCode"].to_int();
+            bourne::json data = document.has_key("data") ? document["data"] : bourne::json();
             switch (eventCode) {
                 case Booted:
                     sendAck(softwareSerial, Booted);
                     break;
-                case SendLEDBrightness:
-                    if (data.containsKey("red")) {
-                        redLEDBrightness = data["red"];
-                    }
-                    if (data.containsKey("green")) {
-                        greenLEDBrightness = data["green"];
-                    }
-                    if (data.containsKey("blue")) {
-                        blueLEDBrightness = data["blue"];
-                    }
+                case SendLEDBrightness: {
+                    LEDInfo ledInfo = LEDInfo();
+                    ledInfo.fromJson(data.dump());
                     sendAck(softwareSerial, SendLEDBrightness);
                     break;
+                }
                 case StartScan:
                     sendAck(softwareSerial, StartScan);
                     break;
