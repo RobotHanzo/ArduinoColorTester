@@ -1,15 +1,15 @@
-
+#include <list>
 #include "ScanResult.h"
 
 
 ScanResult::ScanResult() {
-	profile = ScanProfile();
-	results = std::list<Serializable>();
-	brief = ScanResultBrief();
+    profile = ScanProfile();
+    results = std::list<ScanResultData>();
+    brief = ScanResultBrief();
 }
 
 ScanResult::ScanResult(String jsonString) {
-	this->fromJson(jsonString);
+    this->fromJson(jsonString);
 }
 
 ScanResult::~ScanResult() {
@@ -19,21 +19,17 @@ ScanResult::~ScanResult() {
 ScanResult ScanResult::fromJson(DynamicJsonDocument object) {
     const char *profileKey = "profile";
 
-    if(object.containsKey(profileKey)) {
-        JsonVariant value = object[profileKey];
-        ScanProfile* obj = &profile;
-        String serializedValue;
-        serializeJson(value, serializedValue);
-		obj->fromJson(value.dump());
+    if (object.containsKey(profileKey)) {
+        profile.fromJson(object[profileKey].as<JsonObject>());
     }
     const char *resultsKey = "results";
 
-    if(object.containsKey(resultsKey)) {
+    if (object.containsKey(resultsKey)) {
         JsonVariant value = object[resultsKey];
 
-        std::list<Serializable> results_list;
-        Serializable element;
-        for(JsonVariant var : value.as<JsonArray>())
+        std::list<ScanResultData> results_list;
+        ScanResultData element;
+        for (JsonVariant var: value.as<JsonArray>()) {
             String serialized;
             serializeJson(var, serialized);
             element.fromJson(serialized);
@@ -44,12 +40,8 @@ ScanResult ScanResult::fromJson(DynamicJsonDocument object) {
     }
     const char *briefKey = "brief";
 
-    if(object.containsKey(briefKey)) {
-        JsonVariant value = object[briefKey];
-        ScanResultBrief* obj = &brief;
-        String serializedValue;
-        serializeJson(value, serializedValue);
-		obj->fromJson(value.dump());
+    if (object.containsKey(briefKey)) {
+        brief.fromJson(object[briefKey].as<JsonObject>());
     }
     return *this;
 }
@@ -65,68 +57,47 @@ DynamicJsonDocument ScanResult::toJson() {
     DynamicJsonDocument object(200);
 
 
+    object["profile"] = getProfile().toJson();
 
 
-	object["profile"] = getProfile().toJson();
-
-
-    std::list<Serializable> results_list = getResults();
+    std::list<ScanResultData> results_list = getResults();
     JsonArray results_arr = JsonArray();
 
-    for(auto& var : results_list)
-    {
-        Serializable obj = var;
-        results_arr.add(obj.toJson());
+    for (ScanResultData &var: results_list) {
+        results_arr.add(var.toJson());
     }
     object["results"] = results_arr;
 
 
-
-
-
-
-
-	object["brief"] = getBrief().toJson();
+    object["brief"] = getBrief().toJson();
 
 
     return object;
 
 }
 
-ScanProfile
-ScanResult::getProfile()
-{
-	return profile;
+ScanProfile ScanResult::getProfile() {
+    return profile;
 }
 
-void
-ScanResult::setProfile(ScanProfile  profile)
-{
-	this->profile = profile;
+void ScanResult::setProfile(ScanProfile profile) {
+    this->profile = profile;
 }
 
-std::list<Serializable>
-ScanResult::getResults()
-{
-	return results;
+std::list<ScanResultData> ScanResult::getResults() {
+    return results;
 }
 
-void
-ScanResult::setResults(std::list <Serializable> results)
-{
-	this->results = results;
+void ScanResult::setResults(std::list<ScanResultData> results) {
+    this->results = results;
 }
 
-ScanResultBrief
-ScanResult::getBrief()
-{
-	return brief;
+ScanResultBrief ScanResult::getBrief() {
+    return brief;
 }
 
-void
-ScanResult::setBrief(ScanResultBrief  brief)
-{
-	this->brief = brief;
+void ScanResult::setBrief(ScanResultBrief brief) {
+    this->brief = brief;
 }
 
 

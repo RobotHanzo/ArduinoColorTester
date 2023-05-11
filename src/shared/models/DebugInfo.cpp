@@ -21,11 +21,7 @@ DebugInfo DebugInfo::fromJson(DynamicJsonDocument object) {
     const char *brightnessKey = "brightness";
 
     if(object.containsKey(brightnessKey)) {
-        JsonVariant value = object[brightnessKey];
-        LEDInfo* obj = &brightness;
-        String serializedValue;
-        serializeJson(value, serializedValue);
-		obj->fromJson(value.dump());
+        brightness.fromJson(object[brightnessKey].as<JsonObject>());
     }
     const char *photoresistorReadingKey = "photoresistorReading";
 
@@ -36,20 +32,12 @@ DebugInfo DebugInfo::fromJson(DynamicJsonDocument object) {
     const char *esp32Key = "esp32";
 
     if(object.containsKey(esp32Key)) {
-        JsonVariant value = object[esp32Key];
-        BoardInfo* obj = &esp32;
-        String serializedValue;
-        serializeJson(value, serializedValue);
-		obj->fromJson(value.dump());
+        esp32.fromJson(object[esp32Key].as<JsonObject>());
     }
     const char *arduinoKey = "arduino";
 
     if(object.containsKey(arduinoKey)) {
-        JsonVariant value = object[arduinoKey];
-        BoardInfo* obj = &arduino;
-        String serializedValue;
-        serializeJson(value, serializedValue);
-		obj->fromJson(value.dump());
+        arduino.fromJson(object[arduinoKey].as<JsonObject>());
     }
     return *this;
 }

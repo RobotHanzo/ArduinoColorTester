@@ -66,11 +66,11 @@ public:
 	void setStatusCode(int  statusCode);
 	/*! \brief Get 
 	 */
-	Serializable getDetails();
+	JsonObject getDetails();
 
 	/*! \brief Set 
 	 */
-	void setDetails(Serializable details);
+	void setDetails(JsonObject details);
 	/*! \brief Get In milliseconds This will be -1 if the task has already began.
 	 */
 	long getEstimatedBeginIn();
@@ -97,7 +97,7 @@ public:
     private:
     int taskId{};
     int statusCode{};
-    Serializable details;
+    JsonObject details;
     long estimatedBeginIn{};
     long elapsed{};
     long estimatedCompletionIn{};

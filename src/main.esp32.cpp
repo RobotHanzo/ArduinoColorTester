@@ -12,6 +12,7 @@
 #include <ArduinoJson.h>
 #include "shared/Communication.hpp"
 #include "shared/Debug.hpp"
+#include "shared/models/LEDInfo.h"
 
 ESP32Configuration configuration;
 AsyncWebServer server(80);
@@ -44,15 +45,12 @@ void setup() {
     server.serveStatic("/assets/", SPIFFS, "/");
     server.on("/light_on", HTTP_GET, [](AsyncWebServerRequest *request) {
         EventCodes eventCode = SendLEDBrightness;
-        LEDBrightness brightness = LEDBrightness{255, 255, 255};
-        sendEvent(eventCode, brightness);
+        LEDInfo brightness = LEDInfo();
+        brightness.setR(255);
+        brightness.setG(255);
+        brightness.setB(255);
+        sendEvent(eventCode, brightness.toJson());
         request->send(200, "text/plain", "Shining lights");
-    });
-    server.on("/light_off", HTTP_GET, [](AsyncWebServerRequest *request) {
-        EventCodes eventCode = SendLEDBrightness;
-        LEDBrightness brightness = LEDBrightness{0, 0, 0};
-        sendEvent(eventCode, brightness);
-        request->send(200, "text/plain", "Dimming lights");
     });
     server.on("/read_buffer", HTTP_GET, [](AsyncWebServerRequest *request) {
         request->send(200, "text/plain", ser);
@@ -99,7 +97,7 @@ void loop() {
                 case InvalidEvent://TODO
                     break;
                 default:
-                    sendEvent(InvalidEvent, *new InvalidEventReply(message));
+                    sendEvent(InvalidEvent, (new InvalidEventReply(message))->toJson());
                     break;
             }
         }

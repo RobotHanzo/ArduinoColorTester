@@ -3,12 +3,11 @@
 #include "arduino/RickRoll.hpp"
 #include "arduino/ArduinoConfiguration.hpp"
 #include "shared/Debug.hpp"
+#include "shared/models/LEDInfo.h"
 #include <SoftwareSerial.h>
 
 ArduinoConfiguration configuration;
-short redLEDBrightness = 0;
-short greenLEDBrightness = 0;
-short blueLEDBrightness = 0;
+LEDInfo ledInfo;
 bool rickRolling = false;
 SoftwareSerial softwareSerial = *new SoftwareSerial(10, 11);
 
@@ -28,9 +27,10 @@ void setup() {
 }
 
 void loop() {
-    analogWrite(configuration.redLedPort, redLEDBrightness);
-    analogWrite(configuration.greenLedPort, greenLEDBrightness);
-    analogWrite(configuration.blueLedPort, blueLEDBrightness);
+    analogWrite(configuration.redLedPort, ledInfo.getR());
+    analogWrite(configuration.greenLedPort, ledInfo.getG());
+    analogWrite(configuration.blueLedPort, ledInfo.getB());
+
     if (softwareSerial.available()) {
         DynamicJsonDocument document(200);
         String message = softwareSerial.readStringUntil('\n');
@@ -43,15 +43,7 @@ void loop() {
                     sendAck(softwareSerial, Booted);
                     break;
                 case SendLEDBrightness:
-                    if (data.containsKey("red")) {
-                        redLEDBrightness = data["red"];
-                    }
-                    if (data.containsKey("green")) {
-                        greenLEDBrightness = data["green"];
-                    }
-                    if (data.containsKey("blue")) {
-                        blueLEDBrightness = data["blue"];
-                    }
+                    ledInfo.fromJson(data);
                     sendAck(softwareSerial, SendLEDBrightness);
                     break;
                 case StartScan:
@@ -63,12 +55,12 @@ void loop() {
                     break;
                 case ReadPhotoResistor:
                     sendReply(softwareSerial, ReadPhotoResistor,
-                              *new ReadPhotoResistorReply(analogRead(configuration.photoResistorPort)));
+                              (new ReadPhotoResistorReply(analogRead(configuration.photoResistorPort)))->toJson());
                     break;
                 case InvalidEvent://TODO
                     break;
                 default:
-                    sendEvent(softwareSerial, InvalidEvent, *new InvalidEventReply(message));
+                    sendEvent(softwareSerial, InvalidEvent, ((new InvalidEventReply(message))->toJson()));
                     break;
             }
         }

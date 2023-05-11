@@ -27,43 +27,6 @@ enum EventCodes {
     InvalidEvent = 255
 };
 
-class LEDBrightness : public Serializable<LEDBrightness> {
-public:
-    LEDBrightness(short r, short g, short b) {
-        red = r;
-        green = g;
-        blue = b;
-    }
-
-    short red = 0;
-    short green = 0;
-    short blue = 0;
-
-    DynamicJsonDocument toJson() override {
-        DynamicJsonDocument document(200);
-        document["red"] = red;
-        document["green"] = green;
-        document["blue"] = blue;
-        return document;
-    }
-
-    LEDBrightness fromJson(String json) override {
-        DynamicJsonDocument document(200);
-        deserializeJson(document, json);
-        red = document["red"];
-        green = document["green"];
-        blue = document["blue"];
-        return *this;
-    }
-
-    LEDBrightness fromJson(DynamicJsonDocument doc) override {
-        red = doc["red"];
-        green = doc["green"];
-        blue = doc["blue"];
-        return *this;
-    }
-};
-
 void sendEvent(EventCodes eventCode) {
     DynamicJsonDocument document(200);
     document["eventCode"] = eventCode;
@@ -94,38 +57,38 @@ void sendAck(Stream &s, EventCodes eventCode) {
     s.println();
 }
 
-void sendReply(EventCodes eventCode, Serializable<JsonObject> &data) {
+void sendReply(EventCodes eventCode, const JsonDocument& data) {
     DynamicJsonDocument document(200);
     document["eventCode"] = Reply;
     JsonObject d = document.createNestedObject("data");
     d["code"] = eventCode;
-    d["data"] = data.toJson();
+    d["data"] = data;
     serializeJson(document, Serial);
     Serial.println();
 }
 
-void sendReply(Stream &s, EventCodes eventCode, Serializable<JsonObject> &data) {
+void sendReply(Stream &s, EventCodes eventCode, const JsonDocument& data) {
     DynamicJsonDocument document(200);
     document["eventCode"] = Reply;
     JsonObject d = document.createNestedObject("data");
     d["code"] = eventCode;
-    d["data"] = data.toJson();
+    d["data"] = data;
     serializeJson(document, s);
     s.println();
 }
 
-void sendEvent(EventCodes eventCode, Serializable<JsonObject> &data) {
+void sendEvent(EventCodes eventCode, const JsonDocument& data) {
     DynamicJsonDocument document(200);
     document["eventCode"] = eventCode;
-    document["data"] = data.toJson();
+    document["data"] = data;
     serializeJson(document, Serial);
     Serial.println();
 }
 
-void sendEvent(Stream &s, EventCodes eventCode, Serializable<JsonObject> &data) {
+void sendEvent(Stream &s, EventCodes eventCode, const JsonDocument& data) {
     DynamicJsonDocument document(200);
     document["eventCode"] = eventCode;
-    document["data"] = data.toJson();
+    document["data"] = data;
     serializeJson(document, s);
     s.println();
 }

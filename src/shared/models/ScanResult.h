@@ -15,7 +15,7 @@
 #include "Serializable.h"
 #include "ScanProfile.h"
 #include "ScanResultBrief.h"
-
+#include "ScanResultData.h"
 
 
 /*! \brief The result of a scan
@@ -61,11 +61,11 @@ public:
 	void setProfile(ScanProfile  profile);
 	/*! \brief Get The respective values represent the signals received from analog reading photoresistor under shining of the indicated color LED, varying from 0 to 1023
 	 */
-	std::list<Serializable> getResults();
+	std::list<ScanResultData> getResults();
 
 	/*! \brief Set The respective values represent the signals received from analog reading photoresistor under shining of the indicated color LED, varying from 0 to 1023
 	 */
-	void setResults(std::list <Serializable> results);
+	void setResults(std::list<ScanResultData> results);
 	/*! \brief Get 
 	 */
 	ScanResultBrief getBrief();
@@ -77,7 +77,7 @@ public:
 
     private:
     ScanProfile profile;
-    <Serializable> results;
+    std::list<ScanResultData> results;
     ScanResultBrief brief;
 };
 

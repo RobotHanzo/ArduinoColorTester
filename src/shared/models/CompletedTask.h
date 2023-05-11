@@ -59,24 +59,24 @@ public:
 	void setTaskId(int  taskId);
 	/*! \brief Get 
 	 */
-	Serializable getDetails();
+	JsonObject getDetails();
 
 	/*! \brief Set 
 	 */
-	void setDetails(Serializable  details);
+	void setDetails(JsonObject details);
 	/*! \brief Get 
 	 */
-	Serializable getResult();
+	JsonObject getResult();
 
 	/*! \brief Set 
 	 */
-	void setResult(Serializable  result);
+	void setResult(JsonObject result);
 
 
     private:
     int taskId{};
-    Serializable details;
-    Serializable result;
+    JsonObject details;
+    JsonObject result;
 };
 
 #endif /* TINY_CPP_CLIENT_CompletedTask_H_ */

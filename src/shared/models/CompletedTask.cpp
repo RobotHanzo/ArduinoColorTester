@@ -4,8 +4,8 @@
 
 CompletedTask::CompletedTask() {
 	taskId = int(0);
-	details = null;
-	result = null;
+	details = JsonObject();
+	result = JsonObject();
 }
 
 CompletedTask::CompletedTask(String jsonString) {
@@ -26,20 +26,12 @@ CompletedTask CompletedTask::fromJson(DynamicJsonDocument object) {
     const char *detailsKey = "details";
 
     if(object.containsKey(detailsKey)) {
-        JsonVariant value = object[detailsKey];
-        Serializable* obj = &details;
-        String serializedValue;
-        serializeJson(value, serializedValue);
-		obj->fromJson(value.dump());
+        details = object[detailsKey];
     }
     const char *resultKey = "result";
 
     if(object.containsKey(resultKey)) {
-        JsonVariant value = object[resultKey];
-        Serializable* obj = &result;
-        String serializedValue;
-        serializeJson(value, serializedValue);
-		obj->fromJson(value.dump());
+        result = object[resultKey];
     }
     return *this;
 }
@@ -63,13 +55,13 @@ DynamicJsonDocument CompletedTask::toJson() {
 
 
 
-	object["details"] = getDetails().toJson();
+	object["details"] = getDetails();
 
 
 
 
 
-	object["result"] = getResult().toJson();
+	object["result"] = getResult();
 
 
     return object;
@@ -88,26 +80,25 @@ CompletedTask::setTaskId(int  taskId)
 	this->taskId = taskId;
 }
 
-Serializable
-CompletedTask::getDetails()
+JsonObject CompletedTask::getDetails()
 {
 	return details;
 }
 
 void
-CompletedTask::setDetails(Serializable  details)
+CompletedTask::setDetails(JsonObject details)
 {
 	this->details = details;
 }
 
-Serializable
+JsonObject
 CompletedTask::getResult()
 {
 	return result;
 }
 
 void
-CompletedTask::setResult(Serializable  result)
+CompletedTask::setResult(JsonObject result)
 {
 	this->result = result;
 }

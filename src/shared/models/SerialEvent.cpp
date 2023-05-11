@@ -25,11 +25,7 @@ SerialEvent SerialEvent::fromJson(DynamicJsonDocument object) {
     const char *dataKey = "data";
 
     if(object.containsKey(dataKey)) {
-        JsonVariant value = object[dataKey];
-        SerialEventData* obj = &data;
-        String serializedValue;
-        serializeJson(value, serializedValue);
-		obj->fromJson(value.dump());
+        data.fromJson(object[dataKey].as<JsonObject>());
     }
     return *this;
 }

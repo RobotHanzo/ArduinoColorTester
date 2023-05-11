@@ -19,7 +19,6 @@ public:
 
     DynamicJsonDocument toJson() override {
         DynamicJsonDocument document(200);
-        JsonArray;
         document["scanTimes"] = scanTimes;
         document["scanInterval"] = scanInterval;
         document["brightness"] = brightness;
