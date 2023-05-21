@@ -4,6 +4,7 @@
 #include "arduino/ArduinoConfiguration.hpp"
 #include "shared/Debug.hpp"
 #include "shared/models/LEDInfo.h"
+#include "../.pio/libdeps/uno/ArduinoSTL/src/serstream"
 #include <SoftwareSerial.h>
 
 ArduinoConfiguration configuration;
@@ -53,15 +54,25 @@ void loop() {
                     rickRolling = !rickRolling;
                     sendAck(softwareSerial, RickRoll);
                     break;
-                case ReadPhotoResistor:
-                    sendReply(softwareSerial, ReadPhotoResistor,
-                              (new ReadPhotoResistorReply(analogRead(configuration.photoResistorPort)))->toJson());
+                case ReadPhotoResistor: {
+                    // We can't use the new keyword since it will cause heap fragmentation
+                    ReadPhotoResistorReply reply(analogRead(configuration.photoResistorPort));
+                    sendReply(softwareSerial, ReadPhotoResistor, reply.toJson());
                     break;
+                }
+                case ReadBoardInfo: {
+                    // temperature sensor is not accurate, we use 0 as a placeholder for now
+                    ReadBoardInfoReply reply(millis(), 0);
+                    sendReply(softwareSerial, ReadBoardInfo, reply.toJson());
+                    break;
+                }
                 case InvalidEvent://TODO
                     break;
-                default:
-                    sendEvent(softwareSerial, InvalidEvent, ((new InvalidEventReply(message))->toJson()));
+                default: {
+                    InvalidEventReply reply(message);
+                    sendEvent(softwareSerial, InvalidEvent, reply.toJson());
                     break;
+                }
             }
         }
     }

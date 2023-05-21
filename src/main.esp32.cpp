@@ -12,6 +12,8 @@
 #include "shared/Communication.hpp"
 #include "shared/Debug.hpp"
 #include "esp32/WebSocket.hpp"
+#include "shared/models/BoardInfo.h"
+
 #define WS_MAX_QUEUED_MESSAGES 256
 
 ESP32Configuration configuration;
@@ -51,6 +53,13 @@ void loop() {
         if (document.containsKey("eventCode")) {
             int eventCode = document["eventCode"];
             JsonObject data = document.containsKey("data") ? document["data"] : JsonObject();
+
+            DynamicJsonDocument websocketReply(200);
+            websocketReply["eventCode"] = enum_to_int(DEBUG_ARDUINO_INCOMING_MESSAGE);
+            websocketReply["data"] = document;
+            String json;
+            serializeJson(websocketReply, json);
+            ws.textAll(json);
             switch (eventCode) {
                 case Booted:
                     sendAck(Booted);
@@ -62,12 +71,25 @@ void loop() {
                     //blink LED
                     break;
                 case Reply:
-                    data = data.containsKey("data") ? data["data"] : JsonObject();
-                    switch (data["code"].as<short>()) {
+                    data = document.containsKey("data") ? document["data"] : JsonObject();
+                    switch (document["code"].as<short>()) {
                         case ReadPhotoResistor: {
                             DynamicJsonDocument websocketReply(200);
                             websocketReply["eventCode"] = enum_to_int(REPLY_DEBUG_READ_PHOTO_RESISTOR);
                             websocketReply["data"]["value"] = data["value"];
+                            String json;
+                            serializeJson(websocketReply, json);
+                            ws.textAll(json);
+                            break;
+                        }
+                        case ReadBoardInfo: {
+                            DynamicJsonDocument websocketReply(200);
+                            websocketReply["eventCode"] = enum_to_int(REPLY_DEBUG_READ_BOARD_INFO);
+                            websocketReply["data"]["arduino"] = data;
+                            BoardInfo esp32Info;
+                            esp32Info.setTemperature(temperatureRead());
+                            esp32Info.setUptime(millis());
+                            websocketReply["data"]["esp32"] = esp32Info.toJson();
                             String json;
                             serializeJson(websocketReply, json);
                             ws.textAll(json);
@@ -78,9 +100,11 @@ void loop() {
                     }
                 case InvalidEvent://TODO
                     break;
-                default:
-                    sendEvent(InvalidEvent, (new InvalidEventReply(message))->toJson());
+                default: {
+                    InvalidEventReply reply(message);
+                    sendEvent(InvalidEvent, reply.toJson());
                     break;
+                }
             }
         }
     }

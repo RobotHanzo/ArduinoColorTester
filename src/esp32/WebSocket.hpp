@@ -17,6 +17,8 @@ enum WebSocketEventCodes {
     DEBUG_SET_LED_BRIGHTNESS = 200,
     DEBUG_READ_PHOTO_RESISTOR = 201,
     DEBUG_ARDUINO_INCOMING_MESSAGE = 202,
+    DEBUG_READ_BOARD_INFO = 203,
+    REPLY_DEBUG_READ_BOARD_INFO = 1203,
     REPLY_DEBUG_READ_PHOTO_RESISTOR = 1201,
 };
 
@@ -74,7 +76,6 @@ onWebSocketEvent(AsyncWebSocket *webSocket, AsyncWebSocketClient *client, AwsEve
                         msg += buff;
                     }
                 }
-                Serial.printf("%s\n", msg.c_str());
             } else {
                 //message is comprised of multiple frames or the frame is split into multiple packets
                 if (info->opcode == WS_TEXT) {
@@ -89,7 +90,6 @@ onWebSocketEvent(AsyncWebSocket *webSocket, AsyncWebSocketClient *client, AwsEve
                     }
                 }
             }
-            Serial.println(msg);
             DynamicJsonDocument object(200);
             deserializeJson(object, msg);
             if (object.containsKey("eventCode")) {
@@ -111,6 +111,11 @@ onWebSocketEvent(AsyncWebSocket *webSocket, AsyncWebSocketClient *client, AwsEve
                     case DEBUG_READ_PHOTO_RESISTOR: {
                         sendEvent(ReadPhotoResistor);
                         sendWebSocketAck(client, WebSocketEventCodes::DEBUG_READ_PHOTO_RESISTOR);
+                        break;
+                    }
+                    case DEBUG_READ_BOARD_INFO: {
+                        sendEvent(ReadBoardInfo);
+                        sendWebSocketAck(client, WebSocketEventCodes::DEBUG_READ_BOARD_INFO);
                         break;
                     }
                     default:

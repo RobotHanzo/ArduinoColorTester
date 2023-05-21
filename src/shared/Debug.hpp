@@ -16,7 +16,7 @@ public:
     int value = 0;
 
     DynamicJsonDocument toJson() override {
-        DynamicJsonDocument document(200);
+        DynamicJsonDocument document(100);
         document["value"] = value;
         return document;
     }
@@ -53,6 +53,36 @@ public:
     }
 
     InvalidEventReply fromJson(String json) override {
+        DynamicJsonDocument document(200);
+        deserializeJson(document, json);
+        return fromJson(document);
+    }
+};
+
+class ReadBoardInfoReply : public Serializable<ReadBoardInfoReply> {
+public:
+    ReadBoardInfoReply(unsigned long uptime, float temperature) {
+        this->uptime = uptime;
+        this->temperature = temperature;
+    }
+
+    unsigned long uptime = 0;
+    float temperature = 0;
+
+    DynamicJsonDocument toJson() override {
+        DynamicJsonDocument document(100);
+        document["uptime"] = uptime;
+        document["temperature"] = temperature;
+        return document;
+    }
+
+    ReadBoardInfoReply fromJson(DynamicJsonDocument document) override {
+        uptime = document["uptime"].as<unsigned long>();
+        temperature = document["temperature"].as<float>();
+        return *this;
+    }
+
+    ReadBoardInfoReply fromJson(String json) override {
         DynamicJsonDocument document(200);
         deserializeJson(document, json);
         return fromJson(document);

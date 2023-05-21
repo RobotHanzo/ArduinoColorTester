@@ -24,6 +24,7 @@ enum EventCodes {
     RickRoll = 201,
     ReadLEDBrightness = 212,
     ReadPhotoResistor = 213,
+    ReadBoardInfo = 214,
     InvalidEvent = 255
 };
 
@@ -31,18 +32,15 @@ int enum_to_int(EventCodes eventCode) {
     return static_cast<int>(eventCode);
 }
 
-void sendEvent(EventCodes eventCode) {
-    DynamicJsonDocument document(200);
-    document["eventCode"] = enum_to_int(eventCode);
-    serializeJson(document, Serial);
-    Serial.println();
-}
-
 void sendEvent(Stream &s, EventCodes eventCode) {
     DynamicJsonDocument document(200);
     document["eventCode"] = enum_to_int(eventCode);
     serializeJson(document, s);
     s.println();
+}
+
+void sendEvent(EventCodes eventCode) {
+    sendEvent(Serial, eventCode);
 }
 
 void sendAck(EventCodes eventCode) {
@@ -61,27 +59,25 @@ void sendAck(Stream &s, EventCodes eventCode) {
     s.println();
 }
 
-void sendReply(EventCodes eventCode, const JsonDocument& data) {
+void sendReply(EventCodes eventCode, const JsonVariant &data) {
     DynamicJsonDocument document(200);
     document["eventCode"] = Reply;
-    JsonObject d = document.createNestedObject("data");
-    d["code"] = eventCode;
-    d["data"] = data;
+    document["code"] = eventCode;
+    document["data"] = data;
     serializeJson(document, Serial);
     Serial.println();
 }
 
-void sendReply(Stream &s, EventCodes eventCode, const JsonDocument& data) {
+void sendReply(Stream &s, EventCodes eventCode, const JsonVariant &data) {
     DynamicJsonDocument document(200);
     document["eventCode"] = Reply;
-    JsonObject d = document.createNestedObject("data");
-    d["code"] = eventCode;
-    d["data"] = data;
+    document["code"] = eventCode;
+    document["data"] = data;
     serializeJson(document, s);
     s.println();
 }
 
-void sendEvent(EventCodes eventCode, const JsonDocument& data) {
+void sendEvent(EventCodes eventCode, const JsonVariant &data) {
     DynamicJsonDocument document(200);
     document["eventCode"] = enum_to_int(eventCode);
     document["data"] = data;
@@ -89,7 +85,7 @@ void sendEvent(EventCodes eventCode, const JsonDocument& data) {
     Serial.println();
 }
 
-void sendEvent(Stream &s, EventCodes eventCode, const JsonDocument& data) {
+void sendEvent(Stream &s, EventCodes eventCode, const JsonDocument &data) {
     DynamicJsonDocument document(200);
     document["eventCode"] = enum_to_int(eventCode);
     document["data"] = data;

@@ -7,7 +7,7 @@
           <q-avatar>
             <img alt="Icon" src="favicon.ico"/>
           </q-avatar>
-          Jerry Control Panel
+          Color Tester
         </q-toolbar-title>
         <q-btn
           dense
@@ -42,32 +42,35 @@
           </q-item-section>
         </q-item>
         <q-space/>
-
         <q-item v-ripple>
-          <q-menu>
-            <div class="row no-wrap q-pa-md">
-              <div class="column">
-                <div class="text-h6 q-mb-md">Settings</div>
-                <q-toggle v-model="mobileData" label="Use Mobile Data"/>
-                <q-toggle v-model="bluetooth" label="Bluetooth"/>
+          <q-item-section avatar>
+            <q-icon name="info"/>
+          </q-item-section>
+
+          <q-item-section>
+            <q-item-label>Device Info</q-item-label>
+          </q-item-section>
+          <q-menu class="q-ma-md">
+            <div class="row no-wrap q-pa-md" :dummy="refresh">
+              <div class="column" v-if="arduinoBoardInfo !== undefined">
+                <div class="text-h6 q-mb-md">Arduino</div>
+                <p>Uptime: {{ new Date(arduinoBoardInfo.uptime).toISOString().slice(11, 19) }}</p>
               </div>
 
               <q-separator class="q-mx-lg" inset vertical/>
 
-              <div class="column items-center">
-                <q-avatar size="72px">
-                  <img src="https://cdn.quasar.dev/img/avatar4.jpg">
-                </q-avatar>
+              <div class="column" v-if="esp32BoardInfo !== undefined">
+                <div class="text-h6 q-mb-md">ESP32</div>
+                <p>Uptime: {{ new Date(esp32BoardInfo.uptime).toISOString().slice(11, 19) }}</p>
+                <p>Temperature: {{ Math.round(esp32BoardInfo.temperature * 10) / 10 }} °C</p>
+              </div>
 
-                <div class="text-subtitle1 q-mt-md q-mb-xs">John Doe</div>
+              <q-separator class="q-mx-lg" inset vertical/>
 
-                <q-btn
-                  v-close-popup
-                  color="primary"
-                  label="Logout"
-                  push
-                  size="sm"
-                />
+              <div class="column">
+                <div class="text-h6 q-mb-md">Module</div>
+                <p>LED Lightness: </p>
+                <p>Photoresistor readings: </p>
               </div>
             </div>
           </q-menu>
@@ -92,6 +95,7 @@
 <script setup>
 import {ref} from 'vue';
 import {useRouter} from 'vue-router';
+import {arduinoBoardInfo, esp32BoardInfo} from 'boot/websocket';
 
 const router = useRouter();
 let leftDrawerOpen = ref(false);
@@ -113,6 +117,15 @@ let endpoints = [
   },
 ];
 let selected = ref('');
+let refresh = ref(0);
+
+function refreshPage() {
+  refresh.value++;
+  setTimeout(refreshPage, 1000);
+}
+
+refreshPage();
+
 for (let endpoint of endpoints) {
   if (router.currentRoute.value.path.startsWith(endpoint.url)) {
     selected.value = endpoint.name;

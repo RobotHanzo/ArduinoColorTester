@@ -1,9 +1,12 @@
 import {boot} from 'quasar/wrappers'
 import {Dialog, Loading} from 'quasar';
+import {BoardInfo} from 'boot/api/api';
 
 // "async" is optional;
 // more info on params: https://v2.quasar.dev/quasar-cli/boot-files
 let ws: WebSocket;
+let arduinoBoardInfo: BoardInfo;
+let esp32BoardInfo: BoardInfo;
 
 function connect(firstTime: boolean) {
   console.log(firstTime ? 'Connecting to websocket...' : 'Attempting to reconnect to websocket...');
@@ -16,8 +19,41 @@ function connect(firstTime: boolean) {
     console.log('WebSocket Client Connected');
   };
 
-  ws.onmessage = function () {
-    //TODO: Handle messages
+  ws.onmessage = function (e) {
+    const data: WebSocketEvent = JSON.parse(e.data);
+    switch (data.eventCode) {
+      case WebSocketEventCodes.ACK.valueOf(): {
+        break;
+      }
+      case WebSocketEventCodes.INVALID_MESSAGE.valueOf(): {
+        console.error('Message rejected by the server', data);
+        break;
+      }
+      case WebSocketEventCodes.INVALID_EVENT_CODE.valueOf(): {
+        console.error('Event code rejected by the server', data);
+        break;
+      }
+      case WebSocketEventCodes.INVALID_DATA.valueOf(): {
+        console.error('Data rejected by the server', data);
+        break;
+      }
+      case WebSocketEventCodes.HELLO.valueOf(): {
+        console.log('Server says hello');
+        break;
+      }
+      case WebSocketEventCodes.DEBUG_ARDUINO_INCOMING_MESSAGE.valueOf(): {
+        break;
+      }
+      case WebSocketEventCodes.REPLY_DEBUG_READ_BOARD_INFO.valueOf(): {
+        arduinoBoardInfo = data.data.arduino;
+        esp32BoardInfo = data.data.esp32;
+        break;
+      }
+      default: {
+        console.error('Unknown event code', data);
+        break;
+      }
+    }
   };
 
   ws.onclose = function (e) {
@@ -49,6 +85,15 @@ function connect(firstTime: boolean) {
   };
 }
 
+function updateBoardInfo() {
+  setTimeout(() => {
+    ws.send(JSON.stringify({
+      eventCode: WebSocketEventCodes.DEBUG_READ_BOARD_INFO,
+    }));
+    updateBoardInfo();
+  }, 1000);
+}
+
 /**
  * The base of all websocket events
  * @export
@@ -63,10 +108,10 @@ export interface WebSocketEvent {
   'eventCode'?: number;
   /**
    *
-   * @type {never}
+   * @type {any}
    * @memberof WebSocketEvent
    */
-  'data'?: never;
+  'data'?: any;
 }
 
 export enum WebSocketEventCodes {
@@ -78,11 +123,14 @@ export enum WebSocketEventCodes {
   DEBUG_SET_LED_BRIGHTNESS = 200,
   DEBUG_READ_PHOTO_RESISTOR = 201,
   DEBUG_ARDUINO_INCOMING_MESSAGE = 202,
+  DEBUG_READ_BOARD_INFO = 203,
+  REPLY_DEBUG_READ_BOARD_INFO = 1203,
   REPLY_DEBUG_READ_PHOTO_RESISTOR = 1201,
 }
 
 export default boot(async ({app}) => {
   connect(true);
   app.config.globalProperties.$ws = ws;
+  updateBoardInfo();
 })
-export {ws};
+export {ws, esp32BoardInfo, arduinoBoardInfo};
