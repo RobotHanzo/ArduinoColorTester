@@ -9,7 +9,6 @@
 #include "SPIFFSEditor.h"
 #include "AsyncElegantOTA.h"
 #include <ArduinoJson.h>
-#include <ESPmDNS.h>
 #include "shared/Communication.hpp"
 #include "shared/Debug.hpp"
 #include "esp32/WebSocket.hpp"
@@ -20,6 +19,7 @@
 ESP32Configuration configuration;
 AsyncWebServer server(80);
 AsyncWebSocket ws("/ws");
+bool isScanning = false;
 
 void setup() {
     pinMode(2, OUTPUT);
@@ -28,10 +28,7 @@ void setup() {
     WiFi.softAP(configuration.ssid, configuration.password, 6, 0, 8);
     AsyncElegantOTA.begin(&server);
     SPIFFS.begin();
-    if(!MDNS.begin("color.com")) {
-        Serial.println("Error starting mDNS");
-        return;
-    }
+
 
     ws.onEvent(onWebSocketEvent);
     server.addHandler(&ws);
@@ -69,14 +66,19 @@ void loop() {
                 case Booted:
                     sendAck(Booted);
                     break;
-                case ScanFinished:
-                    sendAck(ScanFinished);
+                case ScanFinished: {
+                    if (isScanning) {
+                        ScanResult result = ScanResult();
+                        result.fromJson(data);
+                        getFirstQueue()->addScanResult(result);
+                        isScanning = false;
+                    }
                     break;
+                }
                 case Acknowledged:
                     //blink LED
                     break;
                 case Reply:
-                    data = document.containsKey("data") ? document["data"] : JsonObject();
                     switch (document["code"].as<short>()) {
                         case ReadPhotoResistor: {
                             DynamicJsonDocument websocketReply(200);
@@ -111,6 +113,18 @@ void loop() {
                     break;
                 }
             }
+        }
+    }
+    if ((hasQueues()) && !isScanning) {
+        isScanning = true;
+        ScanQueue *queue = getFirstQueue();
+        if (queue->getProfiles().size() > 0) {
+            DynamicJsonDocument document(200);
+            document = queue->getProfiles()[0];
+            queue->getProfiles().remove(0);
+            sendEvent(StartScan, document);
+        } else {
+            finishFirstQueue();
         }
     }
 }

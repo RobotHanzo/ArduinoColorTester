@@ -13,10 +13,11 @@
 #include <ArduinoJson.h>
 #include "Helpers.h"
 #include "Serializable.h"
+#include <list>
+#include "ScanResultData.h"
 
 
-
-/*! \brief 
+/*! \brief
  *
  *  \ingroup Models
  *
@@ -50,25 +51,28 @@ public:
 	 */
     ScanResultBrief fromJson(String jsonObj) override;
 
-	/*! \brief Get 
-	 */
-	int getMedian();
-
-	/*! \brief Set 
-	 */
-	void setMedian(int  median);
-	/*! \brief Get 
-	 */
-	double getAverage();
-
-	/*! \brief Set 
-	 */
-	void setAverage(double  average);
+    ScanResultBrief fromResults(std::list<ScanResultData>);
 
 
     private:
-    int median{};
-    double average{};
+    int medianR;
+    int medianG;
+    int medianB;
+    double averageR;
+    double averageG;
+    double averageB;
+public:
+    int getMedianR() const;
+
+    int getMedianG() const;
+
+    int getMedianB() const;
+
+    double getAverageR() const;
+
+    double getAverageG() const;
+
+    double getAverageB() const;
 };
 
 #endif /* TINY_CPP_CLIENT_ScanResultBrief_H_ */
