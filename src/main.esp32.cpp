@@ -9,6 +9,7 @@
 #include "SPIFFSEditor.h"
 #include "AsyncElegantOTA.h"
 #include <ArduinoJson.h>
+#include <ESPmDNS.h>
 #include "shared/Communication.hpp"
 #include "shared/Debug.hpp"
 #include "esp32/WebSocket.hpp"
@@ -27,6 +28,10 @@ void setup() {
     WiFi.softAP(configuration.ssid, configuration.password, 6, 0, 8);
     AsyncElegantOTA.begin(&server);
     SPIFFS.begin();
+    if(!MDNS.begin("color.com")) {
+        Serial.println("Error starting mDNS");
+        return;
+    }
 
     ws.onEvent(onWebSocketEvent);
     server.addHandler(&ws);

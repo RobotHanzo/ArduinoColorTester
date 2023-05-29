@@ -68,7 +68,7 @@
               <q-separator class="q-mx-lg" inset vertical/>
 
               <div class="column">
-                <div class="text-h6 q-mb-md">Module</div>
+                <div class="text-h6 q-mb-md">Module (WIP)</div>
                 <p>LED Lightness: </p>
                 <p>Photoresistor readings: </p>
               </div>
