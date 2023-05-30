@@ -35,7 +35,6 @@
 #define rest    (-1)
 
 #include <Arduino.h>
-#include "ArduinoConfiguration.hpp"
 
 
 volatile int beatlength = 100; // determines tempo
@@ -97,13 +96,13 @@ int song1_chorus_rhythmn[] =
          3, 3, 3, 1, 2, 2, 2, 4, 8, 4
         };
 
-void rickRoll(ArduinoConfiguration configuration) {
+void rickRoll(uint8_t _pin) {
     int notelength = 0;
     if (a == 1 || a == 2) {
         // intro
         notelength = beatlength * song1_intro_rhythmn[b];
         if (song1_intro_melody[b] > 0) {
-            tone(configuration.buzzerPort, song1_intro_melody[b], notelength);
+            tone(_pin, song1_intro_melody[b], notelength);
         }
         b++;
         if (b >= sizeof(song1_intro_melody) / sizeof(int)) {
@@ -114,7 +113,7 @@ void rickRoll(ArduinoConfiguration configuration) {
         // verse
         notelength = beatlength * 2 * song1_verse1_rhythmn[b];
         if (song1_verse1_melody[b] > 0) {
-            tone(configuration.buzzerPort, song1_verse1_melody[b], notelength);
+            tone(_pin, song1_verse1_melody[b], notelength);
         }
         b++;
         if (b >= sizeof(song1_verse1_melody) / sizeof(int)) {
@@ -125,7 +124,7 @@ void rickRoll(ArduinoConfiguration configuration) {
         // chorus
         notelength = beatlength * song1_chorus_rhythmn[b];
         if (song1_chorus_melody[b] > 0) {
-            tone(configuration.buzzerPort, song1_chorus_melody[b], notelength);
+            tone(_pin, song1_chorus_melody[b], notelength);
         }
         b++;
         if (b >= sizeof(song1_chorus_melody) / sizeof(int)) {
@@ -134,7 +133,7 @@ void rickRoll(ArduinoConfiguration configuration) {
         }
     }
     delay(notelength);
-    noTone(configuration.buzzerPort);
+    noTone(_pin);
     delay(notelength * beatseparationconstant);
     if (a == 7) { // loop back around to beginning of song
         a = 1;

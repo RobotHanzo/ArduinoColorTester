@@ -1,7 +1,6 @@
 #include <Arduino.h>
 #include "shared/Configuration.hpp"
 #include "arduino/RickRoll.hpp"
-#include "arduino/ArduinoConfiguration.hpp"
 #include "shared/Debug.hpp"
 #include "shared/models/LEDInfo.h"
 #include "../.pio/libdeps/uno/ArduinoSTL/src/serstream"
@@ -10,15 +9,18 @@
 #include "arduino/ScanStep.hpp"
 #include <SoftwareSerial.h>
 #define MAX_BRIGHTNESS 1024
+#define RED_LED_PORT 3
+#define GREEN_LED_PORT 5
+#define BLUE_LED_PORT 6
+#define BUZZER_PORT 9
+#define PHOTO_RESISTOR_PORT A0
 
-ArduinoConfiguration configuration;
 LEDInfo ledInfo;
 bool rickRolling = false;
 SoftwareSerial softwareSerial = *new SoftwareSerial(10, 11);
 bool scanning = false;
 ScanStep scanStep = RedLight;
 ScanProfile scanProfile;
-ScanResult scanResult;
 ScanResultData scanningData = ScanResultData();
 
 void setup() {
@@ -26,20 +28,20 @@ void setup() {
     Serial.begin(9600); // For debugging
     softwareSerial.begin(9600);
     delay(200);
-    pinMode(configuration.redLedPort, OUTPUT);
-    pinMode(configuration.greenLedPort, OUTPUT);
-    pinMode(configuration.blueLedPort, OUTPUT);
-    pinMode(configuration.buzzerPort, OUTPUT);
-    pinMode(configuration.photoResistorPort, INPUT);
+    pinMode(RED_LED_PORT, OUTPUT);
+    pinMode(GREEN_LED_PORT, OUTPUT);
+    pinMode(BLUE_LED_PORT, OUTPUT);
+    pinMode(BUZZER_PORT, OUTPUT);
+    pinMode(PHOTO_RESISTOR_PORT, INPUT);
     EventCodes booted = Booted;
     sendEvent(softwareSerial, booted);
     sendEvent(booted);
 }
 
 void loop() {
-    analogWrite(configuration.redLedPort, ledInfo.getR());
-    analogWrite(configuration.greenLedPort, ledInfo.getG());
-    analogWrite(configuration.blueLedPort, ledInfo.getB());
+    analogWrite(RED_LED_PORT, ledInfo.getR());
+    analogWrite(GREEN_LED_PORT, ledInfo.getG());
+    analogWrite(BLUE_LED_PORT, ledInfo.getB());
 
     if (softwareSerial.available()) {
         DynamicJsonDocument document(200);
@@ -61,7 +63,7 @@ void loop() {
                 case StartScan: {
                     scanProfile = ScanProfile();
                     scanProfile.fromJson(data);
-                    scanResult = ScanResult();
+                    scanning = true;
                     sendAck(softwareSerial, StartScan);
                     break;
                 }
@@ -72,7 +74,7 @@ void loop() {
                 }
                 case ReadPhotoResistor: {
                     // We can't use the new keyword since it will cause heap fragmentation
-                    ReadPhotoResistorReply reply(analogRead(configuration.photoResistorPort));
+                    ReadPhotoResistorReply reply(analogRead(PHOTO_RESISTOR_PORT));
                     sendReply(softwareSerial, ReadPhotoResistor, reply.toJson());
                     break;
                 }
@@ -101,7 +103,7 @@ void loop() {
                 scanStep = RedRead;
             }
             case RedRead: {
-                scanningData.setR(analogRead(configuration.photoResistorPort) / MAX_BRIGHTNESS * 255);
+                scanningData.setR(analogRead(PHOTO_RESISTOR_PORT) / MAX_BRIGHTNESS * 255);
                 scanStep = GreenLight;
             }
             case GreenLight: {
@@ -111,7 +113,7 @@ void loop() {
                 scanStep = GreenRead;
             }
             case GreenRead: {
-                scanningData.setG(analogRead(configuration.photoResistorPort) / MAX_BRIGHTNESS * 255);
+                scanningData.setG(analogRead(PHOTO_RESISTOR_PORT) / MAX_BRIGHTNESS * 255);
                 scanStep = BlueLight;
             }
             case BlueLight: {
@@ -121,24 +123,25 @@ void loop() {
                 scanStep = BlueRead;
             }
             case BlueRead: {
-                scanningData.setB(analogRead(configuration.photoResistorPort) / MAX_BRIGHTNESS * 255);
+                scanningData.setB(analogRead(PHOTO_RESISTOR_PORT) / MAX_BRIGHTNESS * 255);
                 scanStep = RedLight;
-                scanResult.getResults().push_back(scanningData);
+                sendEvent(softwareSerial, CollectScanData, scanningData.toJson());
                 if (scanProfile.getScanTimes() > 1) {
                     scanProfile.setScanTimes(scanProfile.getScanTimes() - 1);
                 } else {
+                    ScanResult scanResult = ScanResult();
                     scanning = false;
                     scanResult.setProfile(scanProfile);
                     scanResult.setBrief(ScanResultBrief().fromResults(scanResult.getResults()));
                     sendEvent(softwareSerial, ScanFinished, scanResult.toJson());
-                    delete &scanResult;
                     delete &scanProfile;
                 }
             }
         }
         delay(scanProfile.getScanInterval());
     }
-    if (rickRolling) {
-        rickRoll(configuration);
-    }
+//    We don't have memory for this
+//    if (rickRolling) {
+//        rickRoll(BUZZER_PORT);
+//    }
 }

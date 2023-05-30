@@ -16,6 +16,7 @@ enum EventCodes {
     ScanFinished = 11,
     ScanCanceled = 12,
     ScanAborted = 13,
+    CollectScanData = 14, // We have to let ESP32 store the vector because arduino doesn't have enough RAM
     StartScan = 100,
     CancelScan = 101,
     AbortScan = 102,

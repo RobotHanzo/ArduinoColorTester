@@ -4,7 +4,7 @@
 
 ScanResult::ScanResult() {
     profile = ScanProfile();
-    results = std::list<ScanResultData>();
+    results = std::vector<ScanResultData>();
     brief = ScanResultBrief();
 }
 
@@ -27,7 +27,7 @@ ScanResult ScanResult::fromJson(DynamicJsonDocument object) {
     if (object.containsKey(resultsKey)) {
         JsonVariant value = object[resultsKey];
 
-        std::list<ScanResultData> results_list;
+        std::vector<ScanResultData> results_list;
         ScanResultData element;
         for (JsonVariant var: value.as<JsonArray>()) {
             String serialized;
@@ -60,7 +60,7 @@ DynamicJsonDocument ScanResult::toJson() {
     object["profile"] = getProfile().toJson();
 
 
-    std::list<ScanResultData> results_list = getResults();
+    std::vector<ScanResultData> results_list = getResults();
     JsonArray results_arr = JsonArray();
 
     for (ScanResultData &var: results_list) {
@@ -84,11 +84,11 @@ void ScanResult::setProfile(ScanProfile profile) {
     this->profile = profile;
 }
 
-std::list<ScanResultData> ScanResult::getResults() {
+std::vector<ScanResultData> ScanResult::getResults() {
     return results;
 }
 
-void ScanResult::setResults(std::list<ScanResultData> results) {
+void ScanResult::setResults(std::vector<ScanResultData> results) {
     this->results = results;
 }
 

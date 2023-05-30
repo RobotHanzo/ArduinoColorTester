@@ -61,11 +61,11 @@ public:
 	void setProfile(ScanProfile  profile);
 	/*! \brief Get The respective values represent the signals received from analog reading photoresistor under shining of the indicated color LED, varying from 0 to 1023
 	 */
-	std::list<ScanResultData> getResults();
+	std::vector<ScanResultData> getResults();
 
 	/*! \brief Set The respective values represent the signals received from analog reading photoresistor under shining of the indicated color LED, varying from 0 to 1023
 	 */
-	void setResults(std::list<ScanResultData> results);
+	void setResults(std::vector<ScanResultData> results);
 	/*! \brief Get 
 	 */
 	ScanResultBrief getBrief();
@@ -77,7 +77,7 @@ public:
 
     private:
     ScanProfile profile;
-    std::list<ScanResultData> results;
+    std::vector<ScanResultData> results;
     ScanResultBrief brief;
 };
 

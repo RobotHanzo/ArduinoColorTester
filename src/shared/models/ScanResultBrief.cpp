@@ -93,7 +93,7 @@ DynamicJsonDocument ScanResultBrief::toJson() {
 
 }
 
-ScanResultBrief ScanResultBrief::fromResults(std::list<ScanResultData> results) {
+ScanResultBrief ScanResultBrief::fromResults(std::vector<ScanResultData> results) {
     ScanResultBrief brief = ScanResultBrief();
     std::vector<int> rValues;
     std::vector<int> gValues;
@@ -109,6 +109,7 @@ ScanResultBrief ScanResultBrief::fromResults(std::list<ScanResultData> results) 
     averageR = average(rValues);
     averageG = average(gValues);
     averageB = average(bValues);
+    return brief;
 }
 
 int ScanResultBrief::getMedianR() const {
