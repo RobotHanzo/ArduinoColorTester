@@ -115,7 +115,7 @@ void loop() {
             }
         }
     }
-    if (hasQueues() && !isScanning) {
+    if ((hasQueues()) && !isScanning) {
         isScanning = true;
         ScanQueue *queue = getFirstQueue();
         if (queue->getProfiles().size() > 0) {
@@ -125,7 +125,6 @@ void loop() {
             sendEvent(StartScan, document);
         } else {
             finishFirstQueue();
-            isScanning = false;
         }
     }
 }

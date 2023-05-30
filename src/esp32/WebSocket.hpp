@@ -40,7 +40,7 @@ void sendWebSocketEvent(AsyncWebSocketClient *client, WebSocketEventCodes eventC
     client->text(json);
 }
 
-void sendWebSocketEvent(AsyncWebSocketClient *client, WebSocketEventCodes eventCode, JsonDocument &data) {
+void sendWebSocketEvent(AsyncWebSocketClient *client, WebSocketEventCodes eventCode, JsonDocument& data) {
     DynamicJsonDocument document(200);
     document["eventCode"] = enum_to_int(eventCode);
     document["data"] = data;
@@ -58,8 +58,7 @@ void sendWebSocketAck(AsyncWebSocketClient *client, WebSocketEventCodes eventCod
     client->text(json);
 }
 
-void
-onWebSocketEvent(AsyncWebSocket *webSocket, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data,
+void onWebSocketEvent(AsyncWebSocket *webSocket, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data,
                  size_t len) {
     switch (type) {
         case WS_EVT_CONNECT: {
@@ -123,18 +122,14 @@ onWebSocketEvent(AsyncWebSocket *webSocket, AsyncWebSocketClient *client, AwsEve
                             break;
                         }
                         DynamicJsonDocument document(200);
-                        document["scheduled"] = queued(object["data"]["name"].as<String>());
-                        document["running"] = document["scheduled"] &&
-                                              getFirstQueue()->getName().equals(object["data"]["name"].as<String>());
+                        document["scheduled"] = queued(document["data"]["name"].as<String>());
+                        document["running"] = getFirstQueue()->getName().equals(document["data"]["name"].as<String>());
                         if (document["running"]) {
                             document["progress"] = getFirstQueue()->getProgress();
                         } else {
                             document["progress"] = 0;
                         }
                         document["queueRunning"] = hasQueues();
-                        if (document["queueRunning"]) {
-                            document["runningQueue"] = getFirstQueue()->getName();
-                        }
                         sendWebSocketEvent(client, WebSocketEventCodes::REPLY_QUERY_SCAN_PROGRESS, document);
                         break;
                     }

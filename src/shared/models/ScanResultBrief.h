@@ -51,7 +51,7 @@ public:
 	 */
     ScanResultBrief fromJson(String jsonObj) override;
 
-    ScanResultBrief* fromResults(std::list<ScanResultData>* results);
+    ScanResultBrief fromResults(std::list<ScanResultData>);
 
 
     private:

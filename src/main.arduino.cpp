@@ -9,7 +9,6 @@
 #include "shared/models/ScanResult.h"
 #include "arduino/ScanStep.hpp"
 #include <SoftwareSerial.h>
-
 #define MAX_BRIGHTNESS 1024
 
 ArduinoConfiguration configuration;
@@ -18,10 +17,9 @@ bool rickRolling = false;
 SoftwareSerial softwareSerial = *new SoftwareSerial(10, 11);
 bool scanning = false;
 ScanStep scanStep = RedLight;
-ScanResult *scanResult;
-int currentR = 0;
-int currentG = 0;
-int currentB = 0;
+ScanProfile scanProfile;
+ScanResult scanResult;
+ScanResultData scanningData = ScanResultData();
 
 void setup() {
     pinMode(LED_BUILTIN, OUTPUT);
@@ -36,7 +34,6 @@ void setup() {
     EventCodes booted = Booted;
     sendEvent(softwareSerial, booted);
     sendEvent(booted);
-    Serial.println(analogRead(configuration.photoResistorPort));
 }
 
 void loop() {
@@ -62,10 +59,9 @@ void loop() {
                     break;
                 }
                 case StartScan: {
-                    auto scanProfile = new ScanProfile;
-                    scanProfile->fromJson(data);
-                    scanResult = new ScanResult;
-                    scanning = true;
+                    scanProfile = ScanProfile();
+                    scanProfile.fromJson(data);
+                    scanResult = ScanResult();
                     sendAck(softwareSerial, StartScan);
                     break;
                 }
@@ -77,7 +73,6 @@ void loop() {
                 case ReadPhotoResistor: {
                     // We can't use the new keyword since it will cause heap fragmentation
                     ReadPhotoResistorReply reply(analogRead(configuration.photoResistorPort));
-                    sendReply(Serial, ReadPhotoResistor, reply.toJson());
                     sendReply(softwareSerial, ReadPhotoResistor, reply.toJson());
                     break;
                 }
@@ -97,70 +92,52 @@ void loop() {
             }
         }
     }
-//    if (scanning) {
-//        switch (scanStep) {
-//            case RedLight: {
-//                ledInfo.setR(scanResult->getProfile()->getBrightness());
-//                ledInfo.setG(0);
-//                ledInfo.setB(0);
-//                scanStep = RedRead;
-//                break;
-//            }
-//            case RedRead: {
-//                Serial.println("a: " + String(analogRead(configuration.photoResistorPort) / MAX_BRIGHTNESS * 255));
-//                currentR = analogRead(configuration.photoResistorPort) / MAX_BRIGHTNESS * 255;
-//                scanStep = GreenLight;
-//                break;
-//            }
-//            case GreenLight: {
-//                ledInfo.setR(0);
-//                ledInfo.setG(scanResult->getProfile()->getBrightness());
-//                ledInfo.setB(0);
-//                scanStep = GreenRead;
-//                break;
-//            }
-//            case GreenRead: {
-//                currentG = analogRead(configuration.photoResistorPort) / MAX_BRIGHTNESS * 255;
-//                scanStep = BlueLight;
-//                break;
-//            }
-//            case BlueLight: {
-//                ledInfo.setR(0);
-//                ledInfo.setG(0);
-//                ledInfo.setB(scanResult->getProfile()->getBrightness());
-//                scanStep = BlueRead;
-//                break;
-//            }
-//            case BlueRead: {
-//                currentB = analogRead(configuration.photoResistorPort) / MAX_BRIGHTNESS * 255;
-//                scanStep = RedLight;
-//                Serial.println(currentR);
-//                Serial.println(currentG);
-//                Serial.println(currentB);
-//                auto scanningData = new ScanResultData(&currentR, &currentG, &currentB);
-//                scanResult->getResults()->push_back(*scanningData);
-//                serializeJson(scanningData->toJson(), Serial);
-//                Serial.println();
-//                if (scanResult->getProfile()->getScanTimes() >= 1) {
-//                    scanResult->getProfile()->setScanTimes(scanResult->getProfile()->getScanTimes() - 1);
-//                } else {
-//                    scanning = false;
-//                    ScanResultBrief *brief = new ScanResultBrief();
-//                    sendEvent(Serial, ScanFinished, brief->toJson());
-//                    auto test = scanResult->getResults();
-//                    sendEvent(Serial, ScanFinished, test->begin()->toJson());
-//                    brief->fromResults(scanResult->getResults());
-//                    scanResult->setBrief(brief);
-//                    sendEvent(Serial, ScanFinished, brief->toJson());
-//                    sendEvent(Serial, ScanFinished, scanResult->toJson());
-//                    sendEvent(softwareSerial, ScanFinished, scanResult->toJson());
-//                    delete scanResult;
-//                }
-//                break;
-//            }
-//        }
-//        delay(scanResult->getProfile()->getScanInterval());
-//    }
+    if (scanning) {
+        switch (scanStep) {
+            case RedLight: {
+                ledInfo.setR(scanProfile.getBrightness());
+                ledInfo.setG(0);
+                ledInfo.setB(0);
+                scanStep = RedRead;
+            }
+            case RedRead: {
+                scanningData.setR(analogRead(configuration.photoResistorPort) / MAX_BRIGHTNESS * 255);
+                scanStep = GreenLight;
+            }
+            case GreenLight: {
+                ledInfo.setR(0);
+                ledInfo.setG(scanProfile.getBrightness());
+                ledInfo.setB(0);
+                scanStep = GreenRead;
+            }
+            case GreenRead: {
+                scanningData.setG(analogRead(configuration.photoResistorPort) / MAX_BRIGHTNESS * 255);
+                scanStep = BlueLight;
+            }
+            case BlueLight: {
+                ledInfo.setR(0);
+                ledInfo.setG(0);
+                ledInfo.setB(scanProfile.getBrightness());
+                scanStep = BlueRead;
+            }
+            case BlueRead: {
+                scanningData.setB(analogRead(configuration.photoResistorPort) / MAX_BRIGHTNESS * 255);
+                scanStep = RedLight;
+                scanResult.getResults().push_back(scanningData);
+                if (scanProfile.getScanTimes() > 1) {
+                    scanProfile.setScanTimes(scanProfile.getScanTimes() - 1);
+                } else {
+                    scanning = false;
+                    scanResult.setProfile(scanProfile);
+                    scanResult.setBrief(ScanResultBrief().fromResults(scanResult.getResults()));
+                    sendEvent(softwareSerial, ScanFinished, scanResult.toJson());
+                    delete &scanResult;
+                    delete &scanProfile;
+                }
+            }
+        }
+        delay(scanProfile.getScanInterval());
+    }
     if (rickRolling) {
         rickRoll(configuration);
     }

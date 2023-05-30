@@ -47,15 +47,15 @@ private:
     std::vector<ScanResult> scanResults;
 };
 
-std::vector<ScanQueue> *queues = new std::vector<ScanQueue>();
-std::map<String, std::vector<ScanResult>> *results = new std::map<String, std::vector<ScanResult>>(); //key is name
+std::vector<ScanQueue> queues = std::vector<ScanQueue>();
+std::map<String, std::vector<ScanResult>> results = std::map<String, std::vector<ScanResult>>(); //key is name
 
 ScanQueue *getFirstQueue() {
-    return &queues->front();
+    return &queues.front();
 }
 
 bool queued(const String& name) {
-    for (const ScanQueue& queue : *queues) {
+    for (const ScanQueue& queue : queues) {
         if (queue.getName() == name) {
             return true;
         }
@@ -64,24 +64,24 @@ bool queued(const String& name) {
 }
 
 void addQueue(const ScanQueue& queue) {
-    queues->push_back(queue);
+    queues.push_back(queue);
 }
 
 bool hasQueues() {
-    return !queues->empty();
+    return !queues.empty();
 }
 
 std::vector<ScanResult> getResult(String name) {
-    if (results->find(name) == results->end()) {
+    if (results.find(name) == results.end()) {
         return {};
     }
-    return (*results)[name];
+    return results[name];
 }
 
 void finishFirstQueue() {
-    ScanQueue queue = queues->front();
-    (*results)[queue.getName()] = queue.getScanResults();
-    queues->erase(queues->begin());
+    ScanQueue queue = queues.front();
+    results[queue.getName()] = queue.getScanResults();
+    queues.erase(queues.begin());
 }
 
 
