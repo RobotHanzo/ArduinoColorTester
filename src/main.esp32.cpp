@@ -19,7 +19,6 @@
 ESP32Configuration configuration;
 AsyncWebServer server(80);
 AsyncWebSocket ws("/ws");
-bool isScanning = false;
 
 void setup() {
     pinMode(2, OUTPUT);
@@ -63,21 +62,34 @@ void loop() {
             serializeJson(websocketReply, json);
             ws.textAll(json);
             switch (eventCode) {
-                case Booted:
+                case Booted: {
                     sendAck(Booted);
                     break;
+                }
+                case CollectScanData: {
+                    ScanResultData result = ScanResultData();
+                    result.fromJson(data);
+                    cacheResult(result);
+                    break;
+                }
                 case ScanFinished: {
-                    if (isScanning) {
-                        ScanResult result = ScanResult();
-                        result.fromJson(data);
-                        getFirstQueue()->addScanResult(result);
-                        isScanning = false;
+                    //TODO: this returns garbage
+                    ScanResult result = ScanResult();
+                    result.fromJson(data);
+                    ScanQueue* queue = getFirstQueue();
+                    queue->addScanResult(result);
+                    if (!queue->getProfiles().empty()) {
+                        sendEvent(StartScan, queue->getProfiles().front().toJson());
+                        queue->removeFirstProfile();
+                    } else {
+                        finishFirstQueue();
                     }
                     break;
                 }
-                case Acknowledged:
+                case Acknowledged: {
                     //blink LED
                     break;
+                }
                 case Reply:
                     switch (document["code"].as<short>()) {
                         case ReadPhotoResistor: {
@@ -113,18 +125,6 @@ void loop() {
                     break;
                 }
             }
-        }
-    }
-    if ((hasQueues()) && !isScanning) {
-        isScanning = true;
-        ScanQueue *queue = getFirstQueue();
-        if (queue->getProfiles().size() > 0) {
-            DynamicJsonDocument document(200);
-            document = queue->getProfiles()[0];
-            queue->getProfiles().remove(0);
-            sendEvent(StartScan, document);
-        } else {
-            finishFirstQueue();
         }
     }
 }

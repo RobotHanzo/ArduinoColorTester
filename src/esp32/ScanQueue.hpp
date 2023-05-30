@@ -9,12 +9,18 @@
 #include "../shared/models/ScanProfile.h"
 #include "shared/models/ScanResult.h"
 #include <map>
+std::vector<ScanResultData> resultCache = std::vector<ScanResultData>();
 
 class ScanQueue {
 public:
     ScanQueue fromJson(JsonObject object) {
         name = object["name"].as<String>();
-        profiles = object["profiles"].as<JsonArray>();
+        profiles = std::vector<ScanProfile>();
+        JsonArray array = object["profiles"].as<JsonArray>();
+        for (JsonVariant p : array) {
+            ScanProfile profile;
+            profiles.push_back(profile.fromJson(p.as<JsonObject>()));
+        }
         return *this;
     }
 
@@ -25,11 +31,13 @@ public:
         return name;
     }
 
-    void addScanResult(const ScanResult &scanResult) {
+    void addScanResult(ScanResult &scanResult) {
+        scanResult.setResults(resultCache);
+        scanResult.setBrief(scanResult.getBrief().fromResults(resultCache));
         scanResults.push_back(scanResult);
     }
 
-    const JsonArray &getProfiles() const {
+    std::vector<ScanProfile> &getProfiles() {
         return profiles;
     }
 
@@ -42,15 +50,19 @@ public:
         return (double)scanResults.size() / (double)profiles.size();
     }
 
+    void removeFirstProfile() {
+        profiles.erase(profiles.begin());
+    }
+
 private:
-    JsonArray profiles;
+    std::vector<ScanProfile> profiles;
     std::vector<ScanResult> scanResults;
 };
 
 std::vector<ScanQueue> queues = std::vector<ScanQueue>();
 std::map<String, std::vector<ScanResult>> results = std::map<String, std::vector<ScanResult>>(); //key is name
 
-ScanQueue *getFirstQueue() {
+ScanQueue* getFirstQueue() {
     return &queues.front();
 }
 
@@ -63,8 +75,12 @@ bool queued(const String& name) {
     return false;
 }
 
-void addQueue(const ScanQueue& queue) {
+void addQueue(ScanQueue& queue) {
     queues.push_back(queue);
+    if (queues.size() == 1) {
+        sendEvent(StartScan, queue.getProfiles().front().toJson());
+        queue.removeFirstProfile();
+    }
 }
 
 bool hasQueues() {
@@ -82,6 +98,13 @@ void finishFirstQueue() {
     ScanQueue queue = queues.front();
     results[queue.getName()] = queue.getScanResults();
     queues.erase(queues.begin());
+    if (queues.size() > 0) {
+        sendEvent(StartScan, queue.getProfiles().front().toJson());
+    }
+}
+
+void cacheResult(ScanResultData result) {
+    resultCache.push_back(result);
 }
 
 

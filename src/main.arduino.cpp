@@ -64,6 +64,8 @@ void loop() {
                     scanProfile = ScanProfile();
                     scanProfile.fromJson(data);
                     scanning = true;
+                    scanStep = RedLight;
+                    Serial.println("Starting scan");
                     sendAck(softwareSerial, StartScan);
                     break;
                 }
@@ -101,30 +103,36 @@ void loop() {
                 ledInfo.setG(0);
                 ledInfo.setB(0);
                 scanStep = RedRead;
+                break;
             }
             case RedRead: {
-                scanningData.setR(analogRead(PHOTO_RESISTOR_PORT) / MAX_BRIGHTNESS * 255);
+                scanningData.setR(analogRead(PHOTO_RESISTOR_PORT));
                 scanStep = GreenLight;
+                break;
             }
             case GreenLight: {
                 ledInfo.setR(0);
                 ledInfo.setG(scanProfile.getBrightness());
                 ledInfo.setB(0);
                 scanStep = GreenRead;
+                break;
             }
             case GreenRead: {
-                scanningData.setG(analogRead(PHOTO_RESISTOR_PORT) / MAX_BRIGHTNESS * 255);
+                scanningData.setG(analogRead(PHOTO_RESISTOR_PORT));
                 scanStep = BlueLight;
+                break;
             }
             case BlueLight: {
                 ledInfo.setR(0);
                 ledInfo.setG(0);
                 ledInfo.setB(scanProfile.getBrightness());
                 scanStep = BlueRead;
+                break;
             }
             case BlueRead: {
-                scanningData.setB(analogRead(PHOTO_RESISTOR_PORT) / MAX_BRIGHTNESS * 255);
+                scanningData.setB(analogRead(PHOTO_RESISTOR_PORT));
                 scanStep = RedLight;
+                sendEvent(Serial, CollectScanData, scanningData.toJson());
                 sendEvent(softwareSerial, CollectScanData, scanningData.toJson());
                 if (scanProfile.getScanTimes() > 1) {
                     scanProfile.setScanTimes(scanProfile.getScanTimes() - 1);
@@ -132,10 +140,15 @@ void loop() {
                     ScanResult scanResult = ScanResult();
                     scanning = false;
                     scanResult.setProfile(scanProfile);
-                    scanResult.setBrief(ScanResultBrief().fromResults(scanResult.getResults()));
+                    sendEvent(Serial, ScanFinished, scanResult.toJson());
                     sendEvent(softwareSerial, ScanFinished, scanResult.toJson());
-                    delete &scanProfile;
+//                    delete &scanProfile;
+//                    delete &scanResult;
+                    ledInfo.setR(0);
+                    ledInfo.setG(0);
+                    ledInfo.setB(0);
                 }
+                break;
             }
         }
         delay(scanProfile.getScanInterval());

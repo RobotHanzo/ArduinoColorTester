@@ -40,7 +40,7 @@ void sendWebSocketEvent(AsyncWebSocketClient *client, WebSocketEventCodes eventC
     client->text(json);
 }
 
-void sendWebSocketEvent(AsyncWebSocketClient *client, WebSocketEventCodes eventCode, JsonDocument& data) {
+void sendWebSocketEvent(AsyncWebSocketClient *client, WebSocketEventCodes eventCode, JsonDocument &data) {
     DynamicJsonDocument document(200);
     document["eventCode"] = enum_to_int(eventCode);
     document["data"] = data;
@@ -58,7 +58,8 @@ void sendWebSocketAck(AsyncWebSocketClient *client, WebSocketEventCodes eventCod
     client->text(json);
 }
 
-void onWebSocketEvent(AsyncWebSocket *webSocket, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data,
+void
+onWebSocketEvent(AsyncWebSocket *webSocket, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data,
                  size_t len) {
     switch (type) {
         case WS_EVT_CONNECT: {
@@ -123,7 +124,8 @@ void onWebSocketEvent(AsyncWebSocket *webSocket, AsyncWebSocketClient *client, A
                         }
                         DynamicJsonDocument document(200);
                         document["scheduled"] = queued(document["data"]["name"].as<String>());
-                        document["running"] = getFirstQueue()->getName().equals(document["data"]["name"].as<String>());
+                        document["running"] = document["scheduled"] &&
+                                              getFirstQueue()->getName().equals(document["data"]["name"].as<String>());
                         if (document["running"]) {
                             document["progress"] = getFirstQueue()->getProgress();
                         } else {

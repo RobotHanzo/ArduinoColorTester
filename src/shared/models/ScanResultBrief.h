@@ -13,7 +13,7 @@
 #include <ArduinoJson.h>
 #include "Helpers.h"
 #include "Serializable.h"
-#include <list>
+#include <vector>
 #include "ScanResultData.h"
 
 
