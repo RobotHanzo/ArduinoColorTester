@@ -15,7 +15,6 @@
 #include "Serializable.h"
 
 
-
 /*! \brief The respective values represent the signals received from analog reading photoresistor under shining of the indicated color LED, varying from 0 to 1023
  *
  *  \ingroup Models
@@ -28,7 +27,10 @@ public:
     /*! \brief Constructor.
 	 */
     ScanResultData();
+
     ScanResultData(String jsonString);
+
+    ScanResultData(int *r, int *g, int *b);
 
 
     /*! \brief Destructor.
@@ -50,33 +52,35 @@ public:
 	 */
     ScanResultData fromJson(String jsonObj) override;
 
-	/*! \brief Get Red
-	 */
-	int getR();
+    /*! \brief Get Red
+     */
+    int *getR();
 
-	/*! \brief Set Red
-	 */
-	void setR(int  r);
-	/*! \brief Get Green
-	 */
-	int getG();
+    /*! \brief Set Red
+     */
+    void setR(int *r);
 
-	/*! \brief Set Green
-	 */
-	void setG(int  g);
-	/*! \brief Get Blue
-	 */
-	int getB();
+    /*! \brief Get Green
+     */
+    int *getG();
 
-	/*! \brief Set Blue
-	 */
-	void setB(int  b);
+    /*! \brief Set Green
+     */
+    void setG(int *g);
+
+    /*! \brief Get Blue
+     */
+    int *getB();
+
+    /*! \brief Set Blue
+     */
+    void setB(int *b);
 
 
-    private:
-    int r{};
-    int g{};
-    int b{};
+private:
+    int *r;
+    int *g;
+    int *b;
 };
 
 #endif /* TINY_CPP_CLIENT_ScanResultData_H_ */

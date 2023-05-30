@@ -29,7 +29,8 @@ public:
 
     /*! \brief Constructor.
 	 */
-    ScanResult();
+    ScanResult(ScanProfile *p);
+
     ScanResult(String jsonString);
 
 
@@ -52,33 +53,35 @@ public:
 	 */
     ScanResult fromJson(String jsonObj) override;
 
-	/*! \brief Get 
-	 */
-	ScanProfile getProfile();
+    /*! \brief Get
+     */
+    ScanProfile* getProfile();
 
-	/*! \brief Set 
-	 */
-	void setProfile(ScanProfile  profile);
-	/*! \brief Get The respective values represent the signals received from analog reading photoresistor under shining of the indicated color LED, varying from 0 to 1023
-	 */
-	std::list<ScanResultData> getResults();
+    /*! \brief Set
+     */
+    void setProfile(ScanProfile *profile);
 
-	/*! \brief Set The respective values represent the signals received from analog reading photoresistor under shining of the indicated color LED, varying from 0 to 1023
-	 */
-	void setResults(std::list<ScanResultData> results);
-	/*! \brief Get 
-	 */
-	ScanResultBrief getBrief();
+    /*! \brief Get The respective values represent the signals received from analog reading photoresistor under shining of the indicated color LED, varying from 0 to 1023
+     */
+    std::list<ScanResultData>* getResults();
 
-	/*! \brief Set 
-	 */
-	void setBrief(ScanResultBrief  brief);
+    /*! \brief Set The respective values represent the signals received from analog reading photoresistor under shining of the indicated color LED, varying from 0 to 1023
+     */
+    void setResults(std::list<ScanResultData> *results);
+
+    /*! \brief Get
+     */
+    ScanResultBrief* getBrief();
+
+    /*! \brief Set
+     */
+    void setBrief(ScanResultBrief *brief);
 
 
-    private:
-    ScanProfile profile;
-    std::list<ScanResultData> results;
-    ScanResultBrief brief;
+private:
+    ScanProfile *profile;
+    std::list<ScanResultData> *results;
+    ScanResultBrief *brief;
 };
 
 #endif /* TINY_CPP_CLIENT_ScanResult_H_ */
