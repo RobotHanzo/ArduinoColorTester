@@ -22,6 +22,7 @@ bool scanning = false;
 ScanStep scanStep = RedLight;
 ScanProfile scanProfile;
 ScanResultData scanningData = ScanResultData();
+int iteration = 0;
 
 void setup() {
     pinMode(LED_BUILTIN, OUTPUT);
@@ -65,7 +66,6 @@ void loop() {
                     scanProfile.fromJson(data);
                     scanning = true;
                     scanStep = RedLight;
-                    Serial.println("Starting scan");
                     sendAck(softwareSerial, StartScan);
                     break;
                 }
@@ -134,8 +134,8 @@ void loop() {
                 scanStep = RedLight;
                 sendEvent(Serial, CollectScanData, scanningData.toJson());
                 sendEvent(softwareSerial, CollectScanData, scanningData.toJson());
-                if (scanProfile.getScanTimes() > 1) {
-                    scanProfile.setScanTimes(scanProfile.getScanTimes() - 1);
+                if (scanProfile.getScanTimes() - 1 > iteration) {
+                    iteration++;
                 } else {
                     ScanResult scanResult = ScanResult();
                     scanning = false;
@@ -147,6 +147,7 @@ void loop() {
                     ledInfo.setR(0);
                     ledInfo.setG(0);
                     ledInfo.setB(0);
+                    iteration = 0;
                 }
                 break;
             }

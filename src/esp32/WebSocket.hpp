@@ -41,7 +41,7 @@ void sendWebSocketEvent(AsyncWebSocketClient *client, WebSocketEventCodes eventC
 }
 
 void sendWebSocketEvent(AsyncWebSocketClient *client, WebSocketEventCodes eventCode, JsonDocument &data) {
-    DynamicJsonDocument document(200);
+    DynamicJsonDocument document(500);
     document["eventCode"] = enum_to_int(eventCode);
     document["data"] = data;
     String json;

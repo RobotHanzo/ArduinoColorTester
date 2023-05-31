@@ -54,7 +54,7 @@ ScanResult ScanResult::fromJson(String jsonObj) {
 }
 
 DynamicJsonDocument ScanResult::toJson() {
-    DynamicJsonDocument object(200);
+    DynamicJsonDocument object(500);
 
 
     object["profile"] = getProfile().toJson();
