@@ -125,9 +125,9 @@ onWebSocketEvent(AsyncWebSocket *webSocket, AsyncWebSocketClient *client, AwsEve
                         DynamicJsonDocument document(200);
                         document["scheduled"] = queued(document["data"]["name"].as<String>());
                         document["running"] = document["scheduled"] &&
-                                              getFirstQueue()->getName().equals(document["data"]["name"].as<String>());
+                                              getFirstQueue().getName().equals(document["data"]["name"].as<String>());
                         if (document["running"]) {
-                            document["progress"] = getFirstQueue()->getProgress();
+                            document["progress"] = getFirstQueue().getProgress();
                         } else {
                             document["progress"] = 0;
                         }
@@ -142,7 +142,7 @@ onWebSocketEvent(AsyncWebSocket *webSocket, AsyncWebSocketClient *client, AwsEve
                             sendWebSocketEvent(client, WebSocketEventCodes::INVALID_DATA, document);
                             break;
                         }
-                        DynamicJsonDocument document(200);
+                        DynamicJsonDocument document(500);
                         std::vector<ScanResult> result = getResult(object["data"]["name"].as<String>());
                         document["success"] = !result.empty();
                         if (document["success"]) {

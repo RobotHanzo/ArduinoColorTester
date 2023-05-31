@@ -5,7 +5,7 @@
 ScanResult::ScanResult() {
     profile = ScanProfile();
     results = std::vector<ScanResultData>();
-    brief = ScanResultBrief();
+    brief = *new ScanResultBrief();
 }
 
 ScanResult::ScanResult(String jsonString) {

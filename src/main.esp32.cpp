@@ -74,13 +74,16 @@ void loop() {
                 }
                 case ScanFinished: {
                     //TODO: this returns garbage
+                    // {"eventCode":1102,"data":{"success":true,"data":{"profile":{"brightness":125,"scanTimes":1,"scanInterval":100},"results":null,"brief":{"medianR":0,"medianG":0}}}}
                     ScanResult result = ScanResult();
                     result.fromJson(data);
-                    ScanQueue* queue = getFirstQueue();
-                    queue->addScanResult(result);
-                    if (!queue->getProfiles().empty()) {
-                        sendEvent(StartScan, queue->getProfiles().front().toJson());
-                        queue->removeFirstProfile();
+                    ScanQueue queue = getFirstQueue();
+                    queue.addScanResult(result);
+                    writeFirstQueue(queue);
+                    if (!queue.getProfiles().empty()) {
+                        sendEvent(StartScan, queue.getProfiles().front().toJson());
+                        queue.removeFirstProfile();
+                        writeFirstQueue(queue);
                     } else {
                         finishFirstQueue();
                     }

@@ -9,7 +9,8 @@
 #include "../shared/models/ScanProfile.h"
 #include "shared/models/ScanResult.h"
 #include <map>
-std::vector<ScanResultData> resultCache = std::vector<ScanResultData>();
+#include <utility>
+std::vector<ScanResultData> *resultCache = new std::vector<ScanResultData>;
 
 class ScanQueue {
 public:
@@ -32,8 +33,9 @@ public:
     }
 
     void addScanResult(ScanResult &scanResult) {
-        scanResult.setResults(resultCache);
-        scanResult.setBrief(scanResult.getBrief().fromResults(resultCache));
+        scanResult.setBrief(scanResult.getBrief().fromResults(*resultCache));
+        resultCache = new std::vector<ScanResultData>;
+        scanResult.setResults(*resultCache);
         scanResults.push_back(scanResult);
     }
 
@@ -41,7 +43,7 @@ public:
         return profiles;
     }
 
-    const std::vector<ScanResult> &getScanResults() const {
+    std::vector<ScanResult> &getScanResults() {
         return scanResults;
     }
 
@@ -62,8 +64,12 @@ private:
 std::vector<ScanQueue> queues = std::vector<ScanQueue>();
 std::map<String, std::vector<ScanResult>> results = std::map<String, std::vector<ScanResult>>(); //key is name
 
-ScanQueue* getFirstQueue() {
-    return &queues.front();
+ScanQueue getFirstQueue() {
+    return queues.front();
+}
+
+void writeFirstQueue(ScanQueue queue) {
+    queues.front() = queue;
 }
 
 bool queued(const String& name) {
@@ -80,6 +86,7 @@ void addQueue(ScanQueue& queue) {
     if (queues.size() == 1) {
         sendEvent(StartScan, queue.getProfiles().front().toJson());
         queue.removeFirstProfile();
+        writeFirstQueue(queue);
     }
 }
 
@@ -97,14 +104,18 @@ std::vector<ScanResult> getResult(String name) {
 void finishFirstQueue() {
     ScanQueue queue = queues.front();
     results[queue.getName()] = queue.getScanResults();
+    auto a = queue.getScanResults().front().toJson();
+    serializeJson(a, Serial);
     queues.erase(queues.begin());
     if (queues.size() > 0) {
         sendEvent(StartScan, queue.getProfiles().front().toJson());
+        queue.removeFirstProfile();
+        writeFirstQueue(queue);
     }
 }
 
 void cacheResult(ScanResultData result) {
-    resultCache.push_back(result);
+    resultCache->push_back(result);
 }
 
 
