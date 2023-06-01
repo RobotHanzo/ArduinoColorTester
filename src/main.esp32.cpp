@@ -86,6 +86,10 @@ void loop() {
                         writeFirstQueue(queue);
                     } else {
                         finishFirstQueue();
+                        DynamicJsonDocument websocketReply(200);
+                        websocketReply["eventCode"] = enum_to_int(SCAN_FINISHED);
+                        websocketReply["data"]["success"] = true;
+                        websocketReply["data"]["name"] = queue.getName();
                     }
                     break;
                 }
