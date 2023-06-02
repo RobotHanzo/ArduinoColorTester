@@ -10,19 +10,51 @@
 #include "shared/models/ScanResult.h"
 #include <map>
 #include <utility>
+
 std::vector<ScanResultData> *resultCache = new std::vector<ScanResultData>;
 
-class ScanQueue {
+class ScanQueue : public Serializable<ScanQueue> {
 public:
     ScanQueue fromJson(JsonObject object) {
         name = object["name"].as<String>();
         profiles = std::vector<ScanProfile>();
         JsonArray array = object["profiles"].as<JsonArray>();
-        for (JsonVariant p : array) {
+        for (JsonVariant p: array) {
             ScanProfile profile;
             profiles.push_back(profile.fromJson(p.as<JsonObject>()));
         }
         return *this;
+    }
+
+    ScanQueue fromJson(DynamicJsonDocument object) {
+        return *this;
+    }
+
+    ScanQueue fromJson(String jsonObj) {
+        DynamicJsonDocument object(200);
+        deserializeJson(object, jsonObj);
+        fromJson(object);
+        return *this;
+    }
+
+    DynamicJsonDocument toJson() {
+        DynamicJsonDocument object(500);
+        object["name"] = getName();
+        std::vector<ScanResult> results_list = getScanResults();
+        JsonArray results_arr = JsonArray();
+
+        for (ScanResult &var: results_list) {
+            results_arr.add(var.toJson());
+        }
+        object["results"] = results_arr;
+        std::vector<ScanProfile> profiles_list = getProfiles();
+        JsonArray profiles_arr = JsonArray();
+
+        for (ScanProfile &var: profiles_list) {
+            profiles_arr.add(var.toJson());
+        }
+        object["profiles"] = profiles_arr;
+        return object;
     }
 
 private:
@@ -49,7 +81,7 @@ public:
 
     double getProgress() {
         //TODO: return detailed progress by asking arduino
-        return (double)scanResults.size() / (double)profiles.size();
+        return (double) scanResults.size() / (double) profiles.size();
     }
 
     void removeFirstProfile() {
@@ -72,8 +104,8 @@ void writeFirstQueue(ScanQueue queue) {
     queues.front() = queue;
 }
 
-bool queued(const String& name) {
-    for (const ScanQueue& queue : queues) {
+bool queued(const String &name) {
+    for (const ScanQueue &queue: queues) {
         if (queue.getName() == name) {
             return true;
         }
@@ -81,7 +113,7 @@ bool queued(const String& name) {
     return false;
 }
 
-void addQueue(ScanQueue& queue) {
+void ]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]addQueue(ScanQueue &queue) {
     queues.push_back(queue);
     if (queues.size() == 1) {
         sendEvent(StartScan, queue.getProfiles().front().toJson());

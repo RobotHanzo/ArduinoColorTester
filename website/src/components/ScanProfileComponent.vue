@@ -92,7 +92,6 @@ const parentValue = computed({
     emit('update:modelValue', val);
   },
 })
-console.log(parentValue.value)
 
 function updateSingle(slot: string) {
   const slotTyped = slot as keyof typeof modifying;

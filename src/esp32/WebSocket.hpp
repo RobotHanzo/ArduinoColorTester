@@ -97,7 +97,7 @@ onWebSocketEvent(AsyncWebSocket *webSocket, AsyncWebSocketClient *client, AwsEve
                     }
                 }
             }
-            DynamicJsonDocument object(200);
+            DynamicJsonDocument object(2000);
             deserializeJson(object, msg);
             if (object.containsKey("eventCode")) {
                 switch (WebSocketEventCodes(object["eventCode"].as<int>())) {
@@ -111,6 +111,7 @@ onWebSocketEvent(AsyncWebSocket *webSocket, AsyncWebSocketClient *client, AwsEve
                             break;
                         }
                         ScanQueue queue = ScanQueue();
+                        serializeJson(object, Serial);
                         queue.fromJson(object["data"].as<JsonObject>());
                         addQueue(queue);
                         sendWebSocketAck(client, WebSocketEventCodes::SCHEDULE_SCAN);
@@ -133,6 +134,9 @@ onWebSocketEvent(AsyncWebSocket *webSocket, AsyncWebSocketClient *client, AwsEve
                             document["progress"] = 0;
                         }
                         document["queueRunning"] = hasQueues();
+                        if (document["queueRunning"]) {
+                            document["ongoingQueue"] = getFirstQueue().toJson();
+                        }
                         sendWebSocketEvent(client, WebSocketEventCodes::REPLY_QUERY_SCAN_PROGRESS, document);
                         break;
                     }

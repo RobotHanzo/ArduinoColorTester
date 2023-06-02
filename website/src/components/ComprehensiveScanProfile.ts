@@ -15,6 +15,16 @@ export class ComprehensiveScanProfile {
     this.scanInterval = [];
   }
 
+  static fromJson(json: any) : ComprehensiveScanProfile {
+    const result = new ComprehensiveScanProfile();
+    result.name = json.name;
+    result.crossExecution = json.crossExecution;
+    result.brightness = json.brightness;
+    result.scanTimes = json.scanTimes;
+    result.scanInterval = json.scanInterval;
+    return result
+  }
+
   toScanProfile() :ScanProfile[] {
     if (this.crossExecution) {
       const scanProfiles: ScanProfile[] = [];
@@ -22,9 +32,9 @@ export class ComprehensiveScanProfile {
         for (const sct of this.scanTimes) {
           for (const sci of this.scanInterval) {
             scanProfiles.push({
-              brightness: bri,
-              scanTimes: sct,
-              scanInterval: sci,
+              brightness: Math.round(Number(bri)),
+              scanTimes: Number(sct),
+              scanInterval: Number(sci),
             });
           }
         }
