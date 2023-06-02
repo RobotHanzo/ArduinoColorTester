@@ -113,7 +113,7 @@ bool queued(const String &name) {
     return false;
 }
 
-void ]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]addQueue(ScanQueue &queue) {
+void addQueue(ScanQueue &queue) {
     queues.push_back(queue);
     if (queues.size() == 1) {
         sendEvent(StartScan, queue.getProfiles().front().toJson());
