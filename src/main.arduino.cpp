@@ -67,6 +67,8 @@ void loop() {
                     scanning = true;
                     scanStep = RedLight;
                     sendAck(softwareSerial, StartScan);
+                    Serial.println("test: " + message);
+                    sendEvent(StartScan, scanProfile.toJson());
                     break;
                 }
                 case RickRoll: {
@@ -140,7 +142,6 @@ void loop() {
                     ScanResult scanResult = ScanResult();
                     scanning = false;
                     scanResult.setProfile(scanProfile);
-                    sendEvent(Serial, ScanFinished, scanResult.toJson());
                     sendEvent(softwareSerial, ScanFinished, scanResult.toJson());
 //                    delete &scanProfile;
 //                    delete &scanResult;

@@ -79,7 +79,7 @@ void sendReply(Stream &s, EventCodes eventCode, const JsonVariant &data) {
 }
 
 void sendEvent(EventCodes eventCode, const JsonVariant &data) {
-    DynamicJsonDocument document(200);
+    DynamicJsonDocument document(300);
     document["eventCode"] = enum_to_int(eventCode);
     document["data"] = data;
     serializeJson(document, Serial);

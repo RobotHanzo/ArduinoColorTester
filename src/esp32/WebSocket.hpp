@@ -111,7 +111,6 @@ onWebSocketEvent(AsyncWebSocket *webSocket, AsyncWebSocketClient *client, AwsEve
                             break;
                         }
                         ScanQueue queue = ScanQueue();
-                        serializeJson(object, Serial);
                         queue.fromJson(object["data"].as<JsonObject>());
                         addQueue(queue);
                         sendWebSocketAck(client, WebSocketEventCodes::SCHEDULE_SCAN);

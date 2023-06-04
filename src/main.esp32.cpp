@@ -81,6 +81,7 @@ void loop() {
                     queue.addScanResult(result);
                     writeFirstQueue(queue);
                     if (!queue.getProfiles().empty()) {
+                        delay(100); // for whatever dumb reason, this line keeps esp32 from sending partial messages randomly, so we keep it and say nothing :)
                         sendEvent(StartScan, queue.getProfiles().front().toJson());
                         queue.removeFirstProfile();
                         writeFirstQueue(queue);
@@ -90,6 +91,9 @@ void loop() {
                         websocketReply["eventCode"] = enum_to_int(SCAN_FINISHED);
                         websocketReply["data"]["success"] = true;
                         websocketReply["data"]["name"] = queue.getName();
+                        String json;
+                        serializeJson(websocketReply, json);
+                        ws.textAll(json);
                     }
                     break;
                 }
