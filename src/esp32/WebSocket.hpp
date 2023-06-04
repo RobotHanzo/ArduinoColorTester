@@ -133,9 +133,6 @@ onWebSocketEvent(AsyncWebSocket *webSocket, AsyncWebSocketClient *client, AwsEve
                             document["progress"] = 0;
                         }
                         document["queueRunning"] = hasQueues();
-                        if (document["queueRunning"]) {
-                            document["ongoingQueue"] = getFirstQueue().toJson();
-                        }
                         sendWebSocketEvent(client, WebSocketEventCodes::REPLY_QUERY_SCAN_PROGRESS, document);
                         break;
                     }
@@ -150,7 +147,10 @@ onWebSocketEvent(AsyncWebSocket *webSocket, AsyncWebSocketClient *client, AwsEve
                         std::vector<ScanResult> result = getResult(object["data"]["name"].as<String>());
                         document["success"] = !result.empty();
                         if (document["success"]) {
-                            document["data"] = result[0].toJson();
+                            JsonArray results = document.createNestedArray("data");
+                            for (ScanResult r : result) {
+                                results.add(r.toJson());
+                            }
                         }
                         sendWebSocketEvent(client, WebSocketEventCodes::REPLY_READ_SCAN_RESULT, document);
                     }

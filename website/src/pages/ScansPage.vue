@@ -65,13 +65,13 @@ function queryResults() {
   ws.send(JSON.stringify({
     eventCode: WebSocketEventCodes.QUERY_SCAN_PROGRESS.valueOf(),
     data: {
-      name: options[1],
+      name: options[2],
     }
   }))
   ws.send(JSON.stringify({
     eventCode: WebSocketEventCodes.READ_SCAN_RESULT.valueOf(),
     data: {
-      name: options[1],
+      name: options[2],
     }
   }))
 }

@@ -13,7 +13,7 @@
 
 std::vector<ScanResultData> *resultCache = new std::vector<ScanResultData>;
 
-class ScanQueue : public Serializable<ScanQueue> {
+class ScanQueue {
 public:
     ScanQueue fromJson(JsonObject object) {
         name = object["name"].as<String>();
@@ -24,37 +24,6 @@ public:
             profiles.push_back(profile.fromJson(p.as<JsonObject>()));
         }
         return *this;
-    }
-
-    ScanQueue fromJson(DynamicJsonDocument object) {
-        return *this;
-    }
-
-    ScanQueue fromJson(String jsonObj) {
-        DynamicJsonDocument object(200);
-        deserializeJson(object, jsonObj);
-        fromJson(object);
-        return *this;
-    }
-
-    DynamicJsonDocument toJson() {
-        DynamicJsonDocument object(500);
-        object["name"] = getName();
-        std::vector<ScanResult> results_list = getScanResults();
-        JsonArray results_arr = JsonArray();
-
-        for (ScanResult &var: results_list) {
-            results_arr.add(var.toJson());
-        }
-        object["results"] = results_arr;
-        std::vector<ScanProfile> profiles_list = getProfiles();
-        JsonArray profiles_arr = JsonArray();
-
-        for (ScanProfile &var: profiles_list) {
-            profiles_arr.add(var.toJson());
-        }
-        object["profiles"] = profiles_arr;
-        return object;
     }
 
 private:
