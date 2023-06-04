@@ -196,18 +196,12 @@ export interface ScanResult {
  * @interface ScanResultBrief
  */
 export interface ScanResultBrief {
-  /**
-   *
-   * @type {number}
-   * @memberof ScanResultBrief
-   */
-  'median'?: number;
-  /**
-   *
-   * @type {number}
-   * @memberof ScanResultBrief
-   */
-  'average'?: number;
+  'medianR': number;
+  'medianG': number;
+  'medianB': number;
+  'averageR': number;
+  'averageG': number;
+  'averageB': number;
 }
 
 /**

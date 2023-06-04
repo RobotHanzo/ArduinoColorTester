@@ -1,7 +1,29 @@
 <template>
   <q-page padding>
-    <q-btn label="New Scan" icon="add" color="positive" @click="dialog = true"/>
-    <q-btn label="Query Results" icon="search" color="primary" @click="queryResults()"/>
+    <div class="q-mb-lg">
+      <q-btn class="q-mr-lg" color="positive" icon="add" label="New Scan" @click="dialog = true"/>
+      <q-btn color="primary" icon="refresh" label="Refresh" @click="refresh()"/>
+    </div>
+    <div class="row">
+      <q-card v-for="name of $scanResultNames.value" :key="name" class="col-3 q-ma-md">
+        <q-card-section>
+          <div class="text-h6">{{ name }}</div>
+        </q-card-section>
+        <q-card-actions align="right">
+          <q-btn color="primary" flat label="Download" @click="download(name)"/>
+        </q-card-actions>
+      </q-card>
+      <q-card v-for="name of $scanProgress.queue" :key="name" class="col-3 q-ma-md">
+        <q-card-section>
+          <div class="text-h6">{{ name }}</div>
+        </q-card-section>
+        <q-card-section v-if="$scanProgress.current == name">
+          {{ ($scanProgress.progress * 100).toFixed(2) }}%
+        </q-card-section>
+
+        <q-linear-progress :indeterminate="$scanProgress.current != name" :value="$scanProgress.progress" animationSpeed="250" class="q-mb-none"/>
+      </q-card>
+    </div>
   </q-page>
   <q-dialog v-model="dialog">
     <q-card>
@@ -9,7 +31,8 @@
         <div class="text-h6">Start a new scan</div>
       </q-card-section>
       <q-card-section>
-        <q-select v-model="selectedProfileId" label="Profile" :options="options"></q-select>
+        <q-select v-model="selectedProfileId" :options="options" label="Profile" @update:modelValue="name = selectedProfile.name"></q-select>
+        <q-input v-model="name" label="Name" :rules="[val => !!val || 'Name is required']"></q-input>
       </q-card-section>
       <q-card-section>
         <scan-profile-component v-model="selectedProfile" :readonly="true"/>
@@ -47,32 +70,39 @@ let selectedProfileId = ref(options[0]);
 const selectedProfile = computed(() => {
   return getProfile(selectedProfileId.value)
 })
+let name = ref(selectedProfile.value?.name);
 let dialog = ref(false)
 
 function startScan() {
   const generatedProfiles = getProfile(selectedProfileId.value)?.toScanProfile();
-  console.log(generatedProfiles)
   ws.send(JSON.stringify({
     eventCode: WebSocketEventCodes.SCHEDULE_SCAN.valueOf(),
     data: {
-      name: getProfile(selectedProfileId.value)?.name,
+      name: name.value,
       profiles: generatedProfiles
     }
   }))
 }
 
-function queryResults() {
-  ws.send(JSON.stringify({
-    eventCode: WebSocketEventCodes.QUERY_SCAN_PROGRESS.valueOf(),
-    data: {
-      name: options[2],
-    }
-  }))
+function refresh() {
+  try {
+    ws.send(JSON.stringify({
+      eventCode: WebSocketEventCodes.LIST_SCAN_RESULTS.valueOf()
+    }))
+  } catch (e) {
+    console.error(e)
+    setTimeout(refresh, 1000);
+  }
+}
+
+function download(name: string) {
   ws.send(JSON.stringify({
     eventCode: WebSocketEventCodes.READ_SCAN_RESULT.valueOf(),
     data: {
-      name: options[2],
+      name: name
     }
   }))
 }
+
+refresh()
 </script>

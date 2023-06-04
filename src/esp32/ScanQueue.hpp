@@ -22,6 +22,7 @@ public:
         for (JsonVariant p: array) {
             ScanProfile profile;
             profiles.push_back(profile.fromJson(p.as<JsonObject>()));
+            totalSteps += profile.getScanTimes();
         }
         return *this;
     }
@@ -38,6 +39,7 @@ public:
         resultCache = new std::vector<ScanResultData>;
         scanResult.setResults(*resultCache);
         scanResults.push_back(scanResult);
+        completedSteps += scanResult.getProfile().getScanTimes();
     }
 
     std::vector<ScanProfile> &getProfiles() {
@@ -48,9 +50,8 @@ public:
         return scanResults;
     }
 
-    double getProgress() {
-        //TODO: return detailed progress by asking arduino
-        return (double) scanResults.size() / (double) profiles.size();
+    double getProgress() const {
+        return (double) (completedSteps + resultCache->size()) / (double) totalSteps;
     }
 
     void removeFirstProfile() {
@@ -58,6 +59,8 @@ public:
     }
 
 private:
+    int totalSteps = 0;
+    int completedSteps = 0;
     std::vector<ScanProfile> profiles;
     std::vector<ScanResult> scanResults;
 };
@@ -71,15 +74,6 @@ ScanQueue getFirstQueue() {
 
 void writeFirstQueue(ScanQueue queue) {
     queues.front() = queue;
-}
-
-bool queued(const String &name) {
-    for (const ScanQueue &queue: queues) {
-        if (queue.getName() == name) {
-            return true;
-        }
-    }
-    return false;
 }
 
 void addQueue(ScanQueue &queue) {
@@ -105,10 +99,9 @@ std::vector<ScanResult> getResult(String name) {
 void finishFirstQueue() {
     ScanQueue queue = queues.front();
     results[queue.getName()] = queue.getScanResults();
-    auto a = queue.getScanResults().front().toJson();
-    serializeJson(a, Serial);
     queues.erase(queues.begin());
     if (queues.size() > 0) {
+        queue = queues.front();
         sendEvent(StartScan, queue.getProfiles().front().toJson());
         queue.removeFirstProfile();
         writeFirstQueue(queue);
@@ -117,6 +110,22 @@ void finishFirstQueue() {
 
 void cacheResult(ScanResultData result) {
     resultCache->push_back(result);
+}
+
+std::vector<String> getResultKeys() {
+    std::vector<String> keys;
+    for (auto it = results.begin(); it != results.end(); ++it) {
+        keys.push_back(it->first);
+    }
+    return keys;
+}
+
+std::vector<String> getQueuedNames() {
+    std::vector<String> names;
+    for (auto &queue: queues) {
+        names.push_back(queue.getName());
+    }
+    return names;
 }
 
 

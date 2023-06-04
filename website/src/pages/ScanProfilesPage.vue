@@ -1,12 +1,12 @@
 <template>
   <q-page padding>
+    <q-btn color="positive" label="New Profile" @click="addProfile" icon="add" class="q-mb-lg" fixed/>
     <div class="row" :dummy="dummy">
       <div v-for="(x, i) in profiles" :key="x" class="q-pa-sm">
         <scan-profile-component class="col-3" :readonly="true" v-model="profiles[i]"
                                 @remove="profiles.splice(i, 1);saveProfiles()"/>
       </div>
     </div>
-    <q-btn color="positive" @click="addProfile" icon="add" round fab fixed right="20px" bottom="20px"/>
   </q-page>
   <q-dialog persistent v-model="addDialogRef">
     <scan-profile-component v-model="editingProfile">

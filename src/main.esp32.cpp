@@ -55,12 +55,12 @@ void loop() {
             int eventCode = document["eventCode"];
             JsonObject data = document.containsKey("data") ? document["data"] : JsonObject();
 
-            DynamicJsonDocument websocketReply(200);
-            websocketReply["eventCode"] = enum_to_int(DEBUG_ARDUINO_INCOMING_MESSAGE);
-            websocketReply["data"] = document;
-            String json;
-            serializeJson(websocketReply, json);
-            ws.textAll(json);
+//            DynamicJsonDocument websocketReply(200);
+//            websocketReply["eventCode"] = enum_to_int(DEBUG_ARDUINO_INCOMING_MESSAGE);
+//            websocketReply["data"] = document;
+//            String json;
+//            serializeJson(websocketReply, json);
+//            ws.textAll(json);
             switch (eventCode) {
                 case Booted: {
                     sendAck(Booted);
@@ -70,6 +70,7 @@ void loop() {
                     ScanResultData result = ScanResultData();
                     result.fromJson(data);
                     cacheResult(result);
+                    sendScanProgressReply(&ws);
                     break;
                 }
                 case ScanFinished: {
@@ -94,6 +95,7 @@ void loop() {
                         String json;
                         serializeJson(websocketReply, json);
                         ws.textAll(json);
+                        sendScanProgressReply(&ws);
                     }
                     break;
                 }

@@ -19,12 +19,14 @@ enum WebSocketEventCodes {
     QUERY_SCAN_PROGRESS = 101,
     READ_SCAN_RESULT = 102,
     SCAN_FINISHED = 103,
+    LIST_SCAN_RESULTS = 104,
     DEBUG_SET_LED_BRIGHTNESS = 200,
     DEBUG_READ_PHOTO_RESISTOR = 201,
     DEBUG_ARDUINO_INCOMING_MESSAGE = 202,
     DEBUG_READ_BOARD_INFO = 203,
     REPLY_QUERY_SCAN_PROGRESS = 1101,
     REPLY_READ_SCAN_RESULT = 1102,
+    REPLY_LIST_SCAN_RESULTS = 1104,
     REPLY_DEBUG_READ_BOARD_INFO = 1203,
     REPLY_DEBUG_READ_PHOTO_RESISTOR = 1201,
 };
@@ -42,7 +44,7 @@ void sendWebSocketEvent(AsyncWebSocketClient *client, WebSocketEventCodes eventC
 }
 
 void sendWebSocketEvent(AsyncWebSocketClient *client, WebSocketEventCodes eventCode, JsonDocument &data) {
-    DynamicJsonDocument document(500);
+    DynamicJsonDocument document(5500);
     document["eventCode"] = enum_to_int(eventCode);
     document["data"] = data;
     String json;
@@ -57,6 +59,29 @@ void sendWebSocketAck(AsyncWebSocketClient *client, WebSocketEventCodes eventCod
     String json;
     serializeJson(document, json);
     client->text(json);
+}
+
+void sendScanProgressReply(AsyncWebSocket *ws) {
+    DynamicJsonDocument websocketReply(200);
+    websocketReply["eventCode"] = enum_to_int(REPLY_QUERY_SCAN_PROGRESS);
+
+    DynamicJsonDocument document(300);
+    document["running"] = hasQueues();
+    JsonArray queue = document.createNestedArray("queue");
+    if (hasQueues()) {
+        document["current"] = getFirstQueue().getName();
+        document["progress"] = getFirstQueue().getProgress();
+        for (const String &q: getQueuedNames()) {
+            queue.add(q);
+        }
+    } else {
+        document["current"] = nullptr;
+        document["progress"] = nullptr;
+    }
+    websocketReply["data"] = document;
+    String json;
+    serializeJson(websocketReply, json);
+    ws->textAll(json);
 }
 
 void
@@ -117,23 +142,7 @@ onWebSocketEvent(AsyncWebSocket *webSocket, AsyncWebSocketClient *client, AwsEve
                         break;
                     }
                     case QUERY_SCAN_PROGRESS: {
-                        if (!object.containsKey("data")) {
-                            DynamicJsonDocument document(200);
-                            document["data"] = msg;
-                            sendWebSocketEvent(client, WebSocketEventCodes::INVALID_DATA, document);
-                            break;
-                        }
-                        DynamicJsonDocument document(200);
-                        document["scheduled"] = queued(document["data"]["name"].as<String>());
-                        document["running"] = document["scheduled"] &&
-                                              getFirstQueue().getName().equals(document["data"]["name"].as<String>());
-                        if (document["running"]) {
-                            document["progress"] = getFirstQueue().getProgress();
-                        } else {
-                            document["progress"] = 0;
-                        }
-                        document["queueRunning"] = hasQueues();
-                        sendWebSocketEvent(client, WebSocketEventCodes::REPLY_QUERY_SCAN_PROGRESS, document);
+                        sendScanProgressReply(webSocket);
                         break;
                     }
                     case READ_SCAN_RESULT: {
@@ -143,16 +152,28 @@ onWebSocketEvent(AsyncWebSocket *webSocket, AsyncWebSocketClient *client, AwsEve
                             sendWebSocketEvent(client, WebSocketEventCodes::INVALID_DATA, document);
                             break;
                         }
-                        DynamicJsonDocument document(500);
+                        DynamicJsonDocument document(5500);
                         std::vector<ScanResult> result = getResult(object["data"]["name"].as<String>());
                         document["success"] = !result.empty();
+                        document["name"] = object["data"]["name"].as<String>();
                         if (document["success"]) {
                             JsonArray results = document.createNestedArray("data");
-                            for (ScanResult r : result) {
+                            for (ScanResult r: result) {
                                 results.add(r.toJson());
                             }
                         }
                         sendWebSocketEvent(client, WebSocketEventCodes::REPLY_READ_SCAN_RESULT, document);
+                        break;
+                    }
+                    case LIST_SCAN_RESULTS: {
+                        DynamicJsonDocument document(200);
+                        std::vector<String> result = getResultKeys();
+                        JsonArray results = document.createNestedArray("names");
+                        for (const String &r: result) {
+                            results.add(r);
+                        }
+                        sendWebSocketEvent(client, WebSocketEventCodes::REPLY_LIST_SCAN_RESULTS, document);
+                        break;
                     }
 
                     case DEBUG_SET_LED_BRIGHTNESS: {
